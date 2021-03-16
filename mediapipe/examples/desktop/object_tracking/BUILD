@@ -20,6 +20,7 @@ cc_binary(
     name = "object_tracking_cpu",
     deps = [
         "//mediapipe/examples/desktop:demo_run_graph_main",
+        # "//mediapipe/examples/desktop:simple_run_graph_main",
         "//mediapipe/graphs/tracking:desktop_calculators",
     ],
 )

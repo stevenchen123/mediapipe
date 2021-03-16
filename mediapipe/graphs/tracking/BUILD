@@ -38,6 +38,11 @@ cc_library(
         "//mediapipe/graphs/tracking/subgraphs:object_detection_cpu",
         "//mediapipe/graphs/tracking/subgraphs:object_tracking_cpu",
         "//mediapipe/graphs/tracking/subgraphs:renderer_cpu",
+        # edits
+        "//mediapipe/graphs/tracking/subgraphs:object_detection_cpu_new",
+        "//mediapipe/calculators/video:opencv_video_decoder_calculator",
+        "//mediapipe/calculators/video:opencv_video_encoder_calculator",
+        "//mediapipe/calculators/core:packet_cloner_calculator",
     ],
 )
 

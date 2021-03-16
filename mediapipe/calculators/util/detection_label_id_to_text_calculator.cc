@@ -46,29 +46,29 @@ namespace mediapipe {
 //   }
 // }
 class DetectionLabelIdToTextCalculator : public CalculatorBase {
- public:
-  static absl::Status GetContract(CalculatorContract* cc);
+public:
+  static absl::Status GetContract(CalculatorContract *cc);
 
-  absl::Status Open(CalculatorContext* cc) override;
-  absl::Status Process(CalculatorContext* cc) override;
+  absl::Status Open(CalculatorContext *cc) override;
+  absl::Status Process(CalculatorContext *cc) override;
 
- private:
+private:
   absl::node_hash_map<int, std::string> label_map_;
 };
 REGISTER_CALCULATOR(DetectionLabelIdToTextCalculator);
 
-absl::Status DetectionLabelIdToTextCalculator::GetContract(
-    CalculatorContract* cc) {
+absl::Status
+DetectionLabelIdToTextCalculator::GetContract(CalculatorContract *cc) {
   cc->Inputs().Index(0).Set<std::vector<Detection>>();
   cc->Outputs().Index(0).Set<std::vector<Detection>>();
 
   return absl::OkStatus();
 }
 
-absl::Status DetectionLabelIdToTextCalculator::Open(CalculatorContext* cc) {
+absl::Status DetectionLabelIdToTextCalculator::Open(CalculatorContext *cc) {
   cc->SetOffset(TimestampDiff(0));
 
-  const auto& options =
+  const auto &options =
       cc->Options<::mediapipe::DetectionLabelIdToTextCalculatorOptions>();
 
   if (options.has_label_map_path()) {
@@ -92,12 +92,15 @@ absl::Status DetectionLabelIdToTextCalculator::Open(CalculatorContext* cc) {
   return absl::OkStatus();
 }
 
-absl::Status DetectionLabelIdToTextCalculator::Process(CalculatorContext* cc) {
+absl::Status DetectionLabelIdToTextCalculator::Process(CalculatorContext *cc) {
+  // std::cout << '\n'
+  //           << "detection_label_id_to_text_calculator"
+  //           << " " << cc->InputTimestamp() << std::endl;
   std::vector<Detection> output_detections;
-  for (const auto& input_detection :
+  for (const auto &input_detection :
        cc->Inputs().Index(0).Get<std::vector<Detection>>()) {
     output_detections.push_back(input_detection);
-    Detection& output_detection = output_detections.back();
+    Detection &output_detection = output_detections.back();
     bool has_text_label = false;
     for (const int32 label_id : output_detection.label_id()) {
       if (label_map_.find(label_id) != label_map_.end()) {
@@ -110,10 +113,12 @@ absl::Status DetectionLabelIdToTextCalculator::Process(CalculatorContext* cc) {
       output_detection.clear_label_id();
     }
   }
+  // std::cout << "  output detection size() " << output_detections.size()
+  //           << std::endl;
   cc->Outputs().Index(0).AddPacket(
       MakePacket<std::vector<Detection>>(output_detections)
           .At(cc->InputTimestamp()));
   return absl::OkStatus();
 }
 
-}  // namespace mediapipe
+} // namespace mediapipe

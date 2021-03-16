@@ -30,7 +30,7 @@ static int64 detection_id = 0;
 
 inline int GetNextDetectionId() { return ++detection_id; }
 
-}  // namespace
+} // namespace
 
 // Assign a unique id to detections.
 // Note that the calculator will consume the input vector of Detection or
@@ -43,8 +43,8 @@ inline int GetNextDetectionId() { return ++detection_id; }
 //   output_stream: "DETECTIONS:output_detections"
 // }
 class DetectionUniqueIdCalculator : public CalculatorBase {
- public:
-  static absl::Status GetContract(CalculatorContract* cc) {
+public:
+  static absl::Status GetContract(CalculatorContract *cc) {
     RET_CHECK(cc->Inputs().HasTag(kDetectionListTag) ||
               cc->Inputs().HasTag(kDetectionsTag))
         << "None of the input streams are provided.";
@@ -63,22 +63,30 @@ class DetectionUniqueIdCalculator : public CalculatorBase {
     return absl::OkStatus();
   }
 
-  absl::Status Open(CalculatorContext* cc) override {
+  absl::Status Open(CalculatorContext *cc) override {
     cc->SetOffset(mediapipe::TimestampDiff(0));
     return absl::OkStatus();
   }
-  absl::Status Process(CalculatorContext* cc) override;
+  absl::Status Process(CalculatorContext *cc) override;
 };
 REGISTER_CALCULATOR(DetectionUniqueIdCalculator);
 
-absl::Status DetectionUniqueIdCalculator::Process(CalculatorContext* cc) {
+absl::Status DetectionUniqueIdCalculator::Process(CalculatorContext *cc) {
+  // std::cout << " hello world detection_unique_id_calculator"
+  //           << " " << cc->InputTimestamp() << "; has " << kDetectionListTag
+  //           << cc->Inputs().HasTag(kDetectionListTag) << "; has "
+  //           << kDetectionsTag << cc->Inputs().HasTag(kDetectionsTag)
+  //           << " isEmpty() " << cc->Inputs().Tag(kDetectionsTag).IsEmpty()
+  //           << std::endl;
   if (cc->Inputs().HasTag(kDetectionListTag) &&
       !cc->Inputs().Tag(kDetectionListTag).IsEmpty()) {
-    auto result =
-        cc->Inputs().Tag(kDetectionListTag).Value().Consume<DetectionList>();
+    auto result = cc->Inputs()
+                      .Tag(kDetectionListTag)
+                      .Value()
+                      .ConsumeOrCopy<DetectionList>();
     if (result.ok()) {
       auto detection_list = std::move(result).value();
-      for (Detection& detection : *detection_list->mutable_detection()) {
+      for (Detection &detection : *detection_list->mutable_detection()) {
         detection.set_detection_id(GetNextDetectionId());
       }
       cc->Outputs()
@@ -92,10 +100,10 @@ absl::Status DetectionUniqueIdCalculator::Process(CalculatorContext* cc) {
     auto result = cc->Inputs()
                       .Tag(kDetectionsTag)
                       .Value()
-                      .Consume<std::vector<Detection>>();
+                      .ConsumeOrCopy<std::vector<Detection>>();
     if (result.ok()) {
       auto detections = std::move(result).value();
-      for (Detection& detection : *detections) {
+      for (Detection &detection : *detections) {
         detection.set_detection_id(GetNextDetectionId());
       }
       cc->Outputs()
@@ -106,4 +114,4 @@ absl::Status DetectionUniqueIdCalculator::Process(CalculatorContext* cc) {
   return absl::OkStatus();
 }
 
-}  // namespace mediapipe
+} // namespace mediapipe

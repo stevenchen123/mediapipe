@@ -120,22 +120,22 @@ const char kOptionsTag[] = "OPTIONS";
 //
 //
 class BoxTrackerCalculator : public CalculatorBase {
- public:
+public:
   ~BoxTrackerCalculator() override = default;
 
-  static absl::Status GetContract(CalculatorContract* cc);
+  static absl::Status GetContract(CalculatorContract *cc);
 
-  absl::Status Open(CalculatorContext* cc) override;
-  absl::Status Process(CalculatorContext* cc) override;
+  absl::Status Open(CalculatorContext *cc) override;
+  absl::Status Process(CalculatorContext *cc) override;
 
- protected:
-  void RenderStates(const std::vector<MotionBoxState>& states, cv::Mat* mat);
-  void RenderInternalStates(const std::vector<MotionBoxState>& states,
-                            cv::Mat* mat);
+protected:
+  void RenderStates(const std::vector<MotionBoxState> &states, cv::Mat *mat);
+  void RenderInternalStates(const std::vector<MotionBoxState> &states,
+                            cv::Mat *mat);
 
   // MotionBox and corresponding PathSegment of results; used in streaming mode.
   struct MotionBoxPath {
-    MotionBoxPath(MotionBox&& box_, PathSegment&& path_, bool reacq_ = false)
+    MotionBoxPath(MotionBox &&box_, PathSegment &&path_, bool reacq_ = false)
         : box(std::move(box_)), path(std::move(path_)), reacquisition(reacq_) {}
 
     MotionBoxPath() = default;
@@ -150,7 +150,7 @@ class BoxTrackerCalculator : public CalculatorBase {
         while (trim_count-- > 0) {
           path.pop_front();
         }
-      } else {  // backward
+      } else { // backward
         // Trims the box's states queue.
         box.TrimBack(cache_size);
         // Trims the path queue.
@@ -174,23 +174,23 @@ class BoxTrackerCalculator : public CalculatorBase {
   // Specify destination timestamp and frame duration TrackingData was
   // computed for. Used in streaming mode.
   // Returns list of ids that failed.
-  void StreamTrack(const TrackingData& data, int data_frame_num,
+  void StreamTrack(const TrackingData &data, int data_frame_num,
                    int64 dst_timestamp_ms, int64 duration_ms, bool forward,
-                   MotionBoxMap* box_map, std::vector<int>* failed_ids);
+                   MotionBoxMap *box_map, std::vector<int> *failed_ids);
 
   // Fast forwards specified boxes from starting position to current play head
   // and outputs successful boxes to box_map.
   // Specify the timestamp boxes are tracked from via timestamp in each
   // TimedBox.
-  void FastForwardStartPos(const TimedBoxProtoList& start_pos_list,
-                           MotionBoxMap* box_map);
+  void FastForwardStartPos(const TimedBoxProtoList &start_pos_list,
+                           MotionBoxMap *box_map);
 
   // Performs random access tracking from box_list (start,stop) tuples and
   // outputs results.
-  void OutputRandomAccessTrack(const TimedBoxProtoList& box_list,
-                               CalculatorContext* cc);
+  void OutputRandomAccessTrack(const TimedBoxProtoList &box_list,
+                               CalculatorContext *cc);
 
- private:
+private:
   BoxTrackerCalculatorOptions options_;
 
   TimedBoxProtoList initial_pos_;
@@ -251,35 +251,36 @@ class BoxTrackerCalculator : public CalculatorBase {
   // `subframe_alpha` is from 0 to 1 (0, 1 repressents previous and current
   // frame with TRACKING_DATA). Any frames with TRACK_TIME should interpolate in
   // between.
-  void AddSmoothTransitionToOutputBox(int box_id, TimedBox* result_box,
+  void AddSmoothTransitionToOutputBox(int box_id, TimedBox *result_box,
                                       float subframe_alpha = 1.0f);
 
-  std::deque<Timestamp>::iterator GetRandomAccessTimestampPos(
-      const TimedBoxProto& start, bool forward_track);
+  std::deque<Timestamp>::iterator
+  GetRandomAccessTimestampPos(const TimedBoxProto &start, bool forward_track);
 
   std::deque<std::pair<Timestamp, TrackingData>>::iterator
   GetRandomAccessStartData(
-      const std::deque<Timestamp>::iterator& timestamp_pos);
+      const std::deque<Timestamp>::iterator &timestamp_pos);
 
   MotionBoxMap PrepareRandomAccessTrack(
-      const TimedBoxProto& start, int init_frame, bool forward_track,
-      const std::deque<std::pair<Timestamp, TrackingData>>::iterator&
-          start_data);
+      const TimedBoxProto &start, int init_frame, bool forward_track,
+      const std::deque<std::pair<Timestamp, TrackingData>>::iterator
+          &start_data);
 
-  bool RunForwardTrack(
-      const std::deque<std::pair<Timestamp, TrackingData>>::iterator&
-          start_data,
-      int init_frame, MotionBoxMap* single_map, int64 end_time_msec);
+  bool
+  RunForwardTrack(const std::deque<std::pair<Timestamp, TrackingData>>::iterator
+                      &start_data,
+                  int init_frame, MotionBoxMap *single_map,
+                  int64 end_time_msec);
 
   bool RunBackwardTrack(
-      const std::deque<std::pair<Timestamp, TrackingData>>::iterator&
-          start_data,
-      int init_frame, MotionBoxMap* single_map, int64 end_time_msec);
+      const std::deque<std::pair<Timestamp, TrackingData>>::iterator
+          &start_data,
+      int init_frame, MotionBoxMap *single_map, int64 end_time_msec);
 
   void ObtainResultOfRandomAccessTrack(
-      const MotionBoxMap& single_map, const TimedBoxProto& start,
+      const MotionBoxMap &single_map, const TimedBoxProto &start,
       int64 end_time_msec,
-      const std::unique_ptr<TimedBoxProtoList>& result_list);
+      const std::unique_ptr<TimedBoxProtoList> &result_list);
 };
 
 REGISTER_CALCULATOR(BoxTrackerCalculator);
@@ -295,9 +296,9 @@ namespace {
 
 // Convert box position according to rotation angle in degrees.
 void ConvertCoordinateForRotation(float in_top, float in_left, float in_bottom,
-                                  float in_right, int rotation, float* out_top,
-                                  float* out_left, float* out_bottom,
-                                  float* out_right) {
+                                  float in_right, int rotation, float *out_top,
+                                  float *out_left, float *out_bottom,
+                                  float *out_right) {
   CHECK(out_top != nullptr);
   CHECK(out_left != nullptr);
   CHECK(out_bottom != nullptr);
@@ -313,40 +314,40 @@ void ConvertCoordinateForRotation(float in_top, float in_left, float in_bottom,
   float out_width;
   float out_height;
   switch (rotation) {
-    case 0:
-      out_center_x = in_center_x;
-      out_center_y = in_center_y;
-      out_width = in_width;
-      out_height = in_height;
-      break;
-    case -270:  // FALL_THROUGH_INTENDED
-    case 90:
-      out_center_x = 1 - in_center_y;
-      out_center_y = in_center_x;
-      out_width = in_height;
-      out_height = in_width;
-      break;
-    case -180:  // FALL_THROUGH_INTENDED
-    case 180:
-      out_center_x = 1 - in_center_x;
-      out_center_y = 1 - in_center_y;
-      out_width = in_width;
-      out_height = in_height;
-      break;
-    case -90:  // FALL_THROUGH_INTENDED
-    case 270:
-      out_center_x = in_center_y;
-      out_center_y = 1 - in_center_x;
-      out_width = in_height;
-      out_height = in_width;
-      break;
-    default:
-      LOG(ERROR) << "invalid rotation " << rotation;
-      out_center_x = in_center_x;
-      out_center_y = in_center_y;
-      out_width = in_width;
-      out_height = in_height;
-      break;
+  case 0:
+    out_center_x = in_center_x;
+    out_center_y = in_center_y;
+    out_width = in_width;
+    out_height = in_height;
+    break;
+  case -270: // FALL_THROUGH_INTENDED
+  case 90:
+    out_center_x = 1 - in_center_y;
+    out_center_y = in_center_x;
+    out_width = in_height;
+    out_height = in_width;
+    break;
+  case -180: // FALL_THROUGH_INTENDED
+  case 180:
+    out_center_x = 1 - in_center_x;
+    out_center_y = 1 - in_center_y;
+    out_width = in_width;
+    out_height = in_height;
+    break;
+  case -90: // FALL_THROUGH_INTENDED
+  case 270:
+    out_center_x = in_center_y;
+    out_center_y = 1 - in_center_x;
+    out_width = in_height;
+    out_height = in_width;
+    break;
+  default:
+    LOG(ERROR) << "invalid rotation " << rotation;
+    out_center_x = in_center_x;
+    out_center_y = in_center_y;
+    out_width = in_width;
+    out_height = in_height;
+    break;
   }
   *out_top = out_center_y - out_height * 0.5f;
   *out_left = out_center_x - out_width * 0.5f;
@@ -354,8 +355,8 @@ void ConvertCoordinateForRotation(float in_top, float in_left, float in_bottom,
   *out_right = out_center_x + out_width * 0.5f;
 }
 
-void AddStateToPath(const MotionBoxState& state, int64 time_msec,
-                    PathSegment* path) {
+void AddStateToPath(const MotionBoxState &state, int64 time_msec,
+                    PathSegment *path) {
   CHECK(path);
   TimedBox result;
   TimedBoxFromMotionBoxState(state, &result);
@@ -371,9 +372,9 @@ void AddStateToPath(const MotionBoxState& state, int64 time_msec,
   }
 }
 
-}  // namespace.
+} // namespace.
 
-absl::Status BoxTrackerCalculator::GetContract(CalculatorContract* cc) {
+absl::Status BoxTrackerCalculator::GetContract(CalculatorContract *cc) {
   if (cc->Inputs().HasTag("TRACKING")) {
     cc->Inputs().Tag("TRACKING").Set<TrackingData>();
   }
@@ -438,7 +439,7 @@ absl::Status BoxTrackerCalculator::GetContract(CalculatorContract* cc) {
   if (cc->InputSidePackets().HasTag("INITIAL_POS")) {
     cc->InputSidePackets().Tag("INITIAL_POS").Set<std::string>();
   }
-#endif  // defined(__ANDROID__) || defined(__APPLE__) || defined(__EMSCRIPTEN__)
+#endif // defined(__ANDROID__) || defined(__APPLE__) || defined(__EMSCRIPTEN__)
 
   if (cc->InputSidePackets().HasTag("CACHE_DIR")) {
     cc->InputSidePackets().Tag("CACHE_DIR").Set<std::string>();
@@ -455,7 +456,7 @@ absl::Status BoxTrackerCalculator::GetContract(CalculatorContract* cc) {
   return absl::OkStatus();
 }
 
-absl::Status BoxTrackerCalculator::Open(CalculatorContext* cc) {
+absl::Status BoxTrackerCalculator::Open(CalculatorContext *cc) {
   options_ = tool::RetrieveOptions(cc->Options<BoxTrackerCalculatorOptions>(),
                                    cc->InputSidePackets(), kOptionsTag);
 
@@ -474,11 +475,11 @@ absl::Status BoxTrackerCalculator::Open(CalculatorContext* cc) {
     initial_pos_ = ParseTextProtoOrDie<TimedBoxProtoList>(
         cc->InputSidePackets().Tag("INITIAL_POS").Get<std::string>());
   }
-#endif  // !defined(__ANDROID__) && !defined(__APPLE__) &&
-        // !defined(__EMSCRIPTEN__)
+#endif // !defined(__ANDROID__) && !defined(__APPLE__) &&
+       // !defined(__EMSCRIPTEN__)
 
   // Compile list of ids to be tracked.
-  for (const auto& pos : initial_pos_.box()) {
+  for (const auto &pos : initial_pos_.box()) {
     RET_CHECK(pos.id() >= 0) << "Requires id to be set";
     batch_track_ids_.insert(pos.id());
   }
@@ -518,31 +519,32 @@ absl::Status BoxTrackerCalculator::Open(CalculatorContext* cc) {
   return absl::OkStatus();
 }
 
-absl::Status BoxTrackerCalculator::Process(CalculatorContext* cc) {
+absl::Status BoxTrackerCalculator::Process(CalculatorContext *cc) {
+  // std::cout << "hello world box tracker calculator" << std::endl;
   // Batch mode, issue tracking requests.
   if (box_tracker_ && !tracking_issued_) {
-    for (const auto& pos : initial_pos_.box()) {
+    for (const auto &pos : initial_pos_.box()) {
       box_tracker_->NewBoxTrack(TimedBox::FromProto(pos), pos.id());
     }
     tracking_issued_ = true;
   }
 
-  const Timestamp& timestamp = cc->InputTimestamp();
+  const Timestamp &timestamp = cc->InputTimestamp();
   if (timestamp == Timestamp::PreStream()) {
     // Indicator packet.
     return absl::OkStatus();
   }
 
-  InputStream* track_stream = cc->Inputs().HasTag("TRACKING")
+  InputStream *track_stream = cc->Inputs().HasTag("TRACKING")
                                   ? &(cc->Inputs().Tag("TRACKING"))
                                   : nullptr;
-  InputStream* track_time_stream = cc->Inputs().HasTag("TRACK_TIME")
+  InputStream *track_time_stream = cc->Inputs().HasTag("TRACK_TIME")
                                        ? &(cc->Inputs().Tag("TRACK_TIME"))
                                        : nullptr;
 
   // Cache tracking data if possible.
   if (track_stream && !track_stream->IsEmpty()) {
-    const TrackingData& track_data = track_stream->Get<TrackingData>();
+    const TrackingData &track_data = track_stream->Get<TrackingData>();
     const int track_cache_size = options_.streaming_track_data_cache_size();
     if (track_cache_size > 0) {
       tracking_data_cache_.push_back(std::make_pair(timestamp, track_data));
@@ -562,19 +564,19 @@ absl::Status BoxTrackerCalculator::Process(CalculatorContext* cc) {
     }
   }
 
-  InputStream* start_pos_stream = cc->Inputs().HasTag("START_POS")
+  InputStream *start_pos_stream = cc->Inputs().HasTag("START_POS")
                                       ? &(cc->Inputs().Tag("START_POS"))
                                       : nullptr;
 
   MotionBoxMap fast_forward_boxes;
   if (start_pos_stream && !start_pos_stream->IsEmpty()) {
     // Try to fast forward boxes to current tracking head.
-    const TimedBoxProtoList& start_pos_list =
+    const TimedBoxProtoList &start_pos_list =
         start_pos_stream->Get<TimedBoxProtoList>();
     FastForwardStartPos(start_pos_list, &fast_forward_boxes);
   }
 
-  InputStream* start_pos_proto_string_stream =
+  InputStream *start_pos_proto_string_stream =
       cc->Inputs().HasTag("START_POS_PROTO_STRING")
           ? &(cc->Inputs().Tag("START_POS_PROTO_STRING"))
           : nullptr;
@@ -589,17 +591,17 @@ absl::Status BoxTrackerCalculator::Process(CalculatorContext* cc) {
     }
   }
 
-  InputStream* restart_pos_stream = cc->Inputs().HasTag("RESTART_POS")
+  InputStream *restart_pos_stream = cc->Inputs().HasTag("RESTART_POS")
                                         ? &(cc->Inputs().Tag("RESTART_POS"))
                                         : nullptr;
 
   if (restart_pos_stream && !restart_pos_stream->IsEmpty()) {
-    const TimedBoxProtoList& restart_pos_list =
+    const TimedBoxProtoList &restart_pos_list =
         restart_pos_stream->Get<TimedBoxProtoList>();
     FastForwardStartPos(restart_pos_list, &fast_forward_boxes);
   }
 
-  InputStream* cancel_object_id_stream =
+  InputStream *cancel_object_id_stream =
       cc->Inputs().HasTag("CANCEL_OBJECT_ID")
           ? &(cc->Inputs().Tag("CANCEL_OBJECT_ID"))
           : nullptr;
@@ -617,7 +619,7 @@ absl::Status BoxTrackerCalculator::Process(CalculatorContext* cc) {
   TrackingData track_data_to_render;
 
   if (cc->Outputs().HasTag("VIZ")) {
-    InputStream* video_stream = &(cc->Inputs().Tag("VIDEO"));
+    InputStream *video_stream = &(cc->Inputs().Tag("VIDEO"));
     if (!video_stream->IsEmpty()) {
       input_view = formats::MatView(&video_stream->Get<ImageFrame>());
 
@@ -639,7 +641,7 @@ absl::Status BoxTrackerCalculator::Process(CalculatorContext* cc) {
   std::vector<std::vector<MotionBoxState>> box_state_list;
   int64 timestamp_msec = timestamp.Value() / 1000;
 
-  if (box_tracker_) {  // Batch mode.
+  if (box_tracker_) { // Batch mode.
     // Ensure tracking has terminated.
     box_tracker_->WaitForAllOngoingTracks();
 
@@ -647,7 +649,7 @@ absl::Status BoxTrackerCalculator::Process(CalculatorContext* cc) {
     for (int id : batch_track_ids_) {
       TimedBox result;
       std::vector<MotionBoxState> states;
-      std::vector<MotionBoxState>* states_ptr =
+      std::vector<MotionBoxState> *states_ptr =
           (visualize_state_ || visualize_internal_state_) ? &states : nullptr;
 
       if (box_tracker_->GetTimedPosition(id, timestamp_msec, &result,
@@ -671,7 +673,7 @@ absl::Status BoxTrackerCalculator::Process(CalculatorContext* cc) {
     // Streaming mode.
     // If track data is available advance all boxes by new data.
     if (!track_stream->IsEmpty()) {
-      const TrackingData& track_data = track_stream->Get<TrackingData>();
+      const TrackingData &track_data = track_stream->Get<TrackingData>();
 
       if (visualize_tracking_data_) {
         track_data_to_render = track_data;
@@ -685,12 +687,12 @@ absl::Status BoxTrackerCalculator::Process(CalculatorContext* cc) {
 
       std::vector<int> failed_boxes;
       StreamTrack(track_data, frame_num_, time_ms, duration_ms,
-                  true,  // forward.
+                  true, // forward.
                   &streaming_motion_boxes_, &failed_boxes);
 
       // Add fast forward boxes.
       if (!fast_forward_boxes.empty()) {
-        for (const auto& box : fast_forward_boxes) {
+        for (const auto &box : fast_forward_boxes) {
           streaming_motion_boxes_.emplace(box.first, box.second);
         }
         fast_forward_boxes.clear();
@@ -702,7 +704,7 @@ absl::Status BoxTrackerCalculator::Process(CalculatorContext* cc) {
       }
 
       // Init new boxes once data from previous time to current is available.
-      for (const auto& pos : initial_pos_.box()) {
+      for (const auto &pos : initial_pos_.box()) {
         if (timestamp_msec - pos.time_msec() >= 0 &&
             initialized_ids_.find(pos.id()) == initialized_ids_.end()) {
           MotionBoxState init_state;
@@ -747,13 +749,13 @@ absl::Status BoxTrackerCalculator::Process(CalculatorContext* cc) {
       // Generate results for queued up request.
       if (cc->Outputs().HasTag("BOXES") && !queued_track_requests_.empty()) {
         for (int j = 0; j < queued_track_requests_.size(); ++j) {
-          const Timestamp& past_time = queued_track_requests_[j];
+          const Timestamp &past_time = queued_track_requests_[j];
           RET_CHECK(past_time.Value() < timestamp.Value())
               << "Inconsistency, queued up requests should occur in past";
           std::unique_ptr<TimedBoxProtoList> past_box_list(
               new TimedBoxProtoList());
 
-          for (auto& motion_box_path : streaming_motion_boxes_) {
+          for (auto &motion_box_path : streaming_motion_boxes_) {
             TimedBox result_box;
             TimedBoxAtTime(motion_box_path.second.path,
                            past_time.Value() / 1000, &result_box, nullptr);
@@ -777,7 +779,7 @@ absl::Status BoxTrackerCalculator::Process(CalculatorContext* cc) {
       }
 
       // Generate result at current frame.
-      for (auto& motion_box_path : streaming_motion_boxes_) {
+      for (auto &motion_box_path : streaming_motion_boxes_) {
         TimedBox result_box;
         MotionBoxState result_state;
         TimedBoxAtTime(motion_box_path.second.path, timestamp_msec, &result_box,
@@ -805,7 +807,7 @@ absl::Status BoxTrackerCalculator::Process(CalculatorContext* cc) {
     last_tracked_boxes_.clear();
     // Add any remaining fast forward boxes. For example occurs if START_POS is
     // specified with non-matching TRACKING mode
-    for (const auto& reset_box : fast_forward_boxes) {
+    for (const auto &reset_box : fast_forward_boxes) {
       const auto tracked_box_iter =
           streaming_motion_boxes_.find(reset_box.first);
       if (tracked_box_iter != streaming_motion_boxes_.end()) {
@@ -828,31 +830,31 @@ absl::Status BoxTrackerCalculator::Process(CalculatorContext* cc) {
     }
 
     if (visualize_state_) {
-      for (const auto& state_vec : box_state_list) {
+      for (const auto &state_vec : box_state_list) {
         RenderStates(state_vec, &viz_view);
       }
     }
 
     if (visualize_internal_state_) {
-      for (const auto& state_vec : box_state_list) {
+      for (const auto &state_vec : box_state_list) {
         RenderInternalStates(state_vec, &viz_view);
       }
     }
 
-    for (const auto& box : box_track_list.box()) {
+    for (const auto &box : box_track_list.box()) {
       RenderBox(box, &viz_view);
     }
   }
 
   // Handle random access track requests.
-  InputStream* ra_track_stream = cc->Inputs().HasTag("RA_TRACK")
+  InputStream *ra_track_stream = cc->Inputs().HasTag("RA_TRACK")
                                      ? &(cc->Inputs().Tag("RA_TRACK"))
                                      : nullptr;
 
   if (ra_track_stream && !ra_track_stream->IsEmpty()) {
     RET_CHECK(!box_tracker_) << "Random access only for streaming mode "
                              << "implemented.";
-    const TimedBoxProtoList& box_list =
+    const TimedBoxProtoList &box_list =
         ra_track_stream->Get<TimedBoxProtoList>();
     RET_CHECK(box_list.box_size() % 2 == 0)
         << "Expect even number of (start,end) tuples but get "
@@ -860,7 +862,7 @@ absl::Status BoxTrackerCalculator::Process(CalculatorContext* cc) {
     OutputRandomAccessTrack(box_list, cc);
   }
 
-  InputStream* ra_track_proto_string_stream =
+  InputStream *ra_track_proto_string_stream =
       cc->Inputs().HasTag("RA_TRACK_PROTO_STRING")
           ? &(cc->Inputs().Tag("RA_TRACK_PROTO_STRING"))
           : nullptr;
@@ -896,10 +898,10 @@ absl::Status BoxTrackerCalculator::Process(CalculatorContext* cc) {
 }
 
 void BoxTrackerCalculator::AddSmoothTransitionToOutputBox(
-    int box_id, TimedBox* result_box, float subframe_alpha) {
+    int box_id, TimedBox *result_box, float subframe_alpha) {
   if (options_.start_pos_transition_frames() > 0 &&
       frame_num_since_reset_ <= options_.start_pos_transition_frames()) {
-    const auto& box_iter = last_tracked_boxes_.find(box_id);
+    const auto &box_iter = last_tracked_boxes_.find(box_id);
     if (box_iter != last_tracked_boxes_.end()) {
       // We first compute the blend of last tracked box with reset box at the
       // same timestamp as blend_start = alpha * reset_box + (1 - alpha) *
@@ -917,7 +919,7 @@ void BoxTrackerCalculator::AddSmoothTransitionToOutputBox(
 }
 
 void BoxTrackerCalculator::OutputRandomAccessTrack(
-    const TimedBoxProtoList& box_list, CalculatorContext* cc) {
+    const TimedBoxProtoList &box_list, CalculatorContext *cc) {
   std::unique_ptr<TimedBoxProtoList> result_list(new TimedBoxProtoList());
 
   for (int i = 0; i < box_list.box_size(); i += 2) {
@@ -1006,7 +1008,7 @@ void BoxTrackerCalculator::OutputRandomAccessTrack(
 }
 
 std::deque<Timestamp>::iterator
-BoxTrackerCalculator::GetRandomAccessTimestampPos(const TimedBoxProto& start,
+BoxTrackerCalculator::GetRandomAccessTimestampPos(const TimedBoxProto &start,
                                                   bool forward_track) {
   std::deque<Timestamp>::iterator timestamp_pos;
   Timestamp timestamp(start.time_msec() * 1000);
@@ -1022,11 +1024,11 @@ BoxTrackerCalculator::GetRandomAccessTimestampPos(const TimedBoxProto& start,
 
 std::deque<std::pair<Timestamp, TrackingData>>::iterator
 BoxTrackerCalculator::GetRandomAccessStartData(
-    const std::deque<Timestamp>::iterator& timestamp_pos) {
+    const std::deque<Timestamp>::iterator &timestamp_pos) {
   std::deque<std::pair<Timestamp, TrackingData>>::iterator start_data =
       std::find_if(tracking_data_cache_.begin(), tracking_data_cache_.end(),
                    [timestamp_pos](
-                       const std::pair<Timestamp, TrackingData>& item) -> bool {
+                       const std::pair<Timestamp, TrackingData> &item) -> bool {
                      return item.first == *timestamp_pos;
                    });
   return start_data;
@@ -1034,9 +1036,9 @@ BoxTrackerCalculator::GetRandomAccessStartData(
 
 BoxTrackerCalculator::MotionBoxMap
 BoxTrackerCalculator::PrepareRandomAccessTrack(
-    const TimedBoxProto& start, int init_frame, bool forward_track,
-    const std::deque<std::pair<Timestamp, TrackingData>>::iterator&
-        start_data) {
+    const TimedBoxProto &start, int init_frame, bool forward_track,
+    const std::deque<std::pair<Timestamp, TrackingData>>::iterator
+        &start_data) {
   MotionBoxMap single_map;
   // Init state at request time.
   MotionBoxState init_state;
@@ -1068,8 +1070,8 @@ BoxTrackerCalculator::PrepareRandomAccessTrack(
 }
 
 bool BoxTrackerCalculator::RunForwardTrack(
-    const std::deque<std::pair<Timestamp, TrackingData>>::iterator& start_data,
-    int init_frame, MotionBoxMap* single_map, int64 end_time_msec) {
+    const std::deque<std::pair<Timestamp, TrackingData>>::iterator &start_data,
+    int init_frame, MotionBoxMap *single_map, int64 end_time_msec) {
   int curr_frame = init_frame;
   for (auto cache_pos = start_data; cache_pos != tracking_data_cache_.end();
        ++cache_pos, ++curr_frame) {
@@ -1080,7 +1082,7 @@ bool BoxTrackerCalculator::RunForwardTrack(
             ? 0
             : (cache_pos[0].first.Value() - cache_pos[-1].first.Value()) / 1000;
     StreamTrack(cache_pos->second, curr_frame, dst_time_msec, curr_duration,
-                true,  // forward
+                true, // forward
                 single_map, &failed_box);
     if (!failed_box.empty()) {
       return true;
@@ -1093,8 +1095,8 @@ bool BoxTrackerCalculator::RunForwardTrack(
 }
 
 bool BoxTrackerCalculator::RunBackwardTrack(
-    const std::deque<std::pair<Timestamp, TrackingData>>::iterator& start_data,
-    int init_frame, MotionBoxMap* single_map, int64 end_time_msec) {
+    const std::deque<std::pair<Timestamp, TrackingData>>::iterator &start_data,
+    int init_frame, MotionBoxMap *single_map, int64 end_time_msec) {
   int curr_frame = init_frame;
   for (auto cache_pos = start_data; cache_pos != tracking_data_cache_.begin();
        --cache_pos, --curr_frame) {
@@ -1103,7 +1105,7 @@ bool BoxTrackerCalculator::RunBackwardTrack(
     const int64 curr_duration =
         (cache_pos[0].first.Value() - cache_pos[-1].first.Value()) / 1000;
     StreamTrack(cache_pos->second, curr_frame, dst_time_msec, curr_duration,
-                false,  // backward
+                false, // backward
                 single_map, &failed_box);
     if (!failed_box.empty()) {
       return true;
@@ -1116,10 +1118,10 @@ bool BoxTrackerCalculator::RunBackwardTrack(
 }
 
 void BoxTrackerCalculator::ObtainResultOfRandomAccessTrack(
-    const MotionBoxMap& single_map, const TimedBoxProto& start,
+    const MotionBoxMap &single_map, const TimedBoxProto &start,
     int64 end_time_msec,
-    const std::unique_ptr<TimedBoxProtoList>& result_list) {
-  const MotionBoxPath& result_path = single_map.find(start.id())->second;
+    const std::unique_ptr<TimedBoxProtoList> &result_list) {
+  const MotionBoxPath &result_path = single_map.find(start.id())->second;
   TimedBox result_box;
   TimedBoxAtTime(result_path.path, end_time_msec, &result_box, nullptr);
   TimedBoxProto proto = result_box.ToProto();
@@ -1128,7 +1130,7 @@ void BoxTrackerCalculator::ObtainResultOfRandomAccessTrack(
 }
 
 void BoxTrackerCalculator::RenderStates(
-    const std::vector<MotionBoxState>& states, cv::Mat* mat) {
+    const std::vector<MotionBoxState> &states, cv::Mat *mat) {
   for (int k = 0; k < states.size(); ++k) {
     const bool print_stats = k == 0;
     RenderState(states[k], print_stats, mat);
@@ -1136,18 +1138,18 @@ void BoxTrackerCalculator::RenderStates(
 }
 
 void BoxTrackerCalculator::RenderInternalStates(
-    const std::vector<MotionBoxState>& states, cv::Mat* mat) {
-  for (const MotionBoxState& state : states) {
+    const std::vector<MotionBoxState> &states, cv::Mat *mat) {
+  for (const MotionBoxState &state : states) {
     RenderInternalState(state.internal(), mat);
   }
 }
 
-void BoxTrackerCalculator::StreamTrack(const TrackingData& data,
+void BoxTrackerCalculator::StreamTrack(const TrackingData &data,
                                        int data_frame_num,
                                        int64 dst_timestamp_ms,
                                        int64 duration_ms, bool forward,
-                                       MotionBoxMap* box_map,
-                                       std::vector<int>* failed_ids) {
+                                       MotionBoxMap *box_map,
+                                       std::vector<int> *failed_ids) {
   CHECK(box_map);
   CHECK(failed_ids);
 
@@ -1158,7 +1160,7 @@ void BoxTrackerCalculator::StreamTrack(const TrackingData& data,
   }
 
   // Track all existing boxes by one frame.
-  MotionVectorFrame mvf;  // Holds motion from current to previous frame.
+  MotionVectorFrame mvf; // Holds motion from current to previous frame.
   MotionVectorFrameFromTrackingData(data, &mvf);
   mvf.actively_discarded_tracked_ids = &actively_discarded_tracked_ids_;
 
@@ -1175,15 +1177,15 @@ void BoxTrackerCalculator::StreamTrack(const TrackingData& data,
   const int from_frame = data_frame_num - (forward ? 1 : 0);
   const int to_frame = forward ? from_frame + 1 : from_frame - 1;
 
-  for (auto& motion_box : *box_map) {
-    if (!motion_box.second.box.TrackStep(from_frame,  // from frame.
+  for (auto &motion_box : *box_map) {
+    if (!motion_box.second.box.TrackStep(from_frame, // from frame.
                                          mvf, forward)) {
       failed_ids->push_back(motion_box.first);
       LOG(INFO) << "lost track. pushed failed id: " << motion_box.first;
     } else {
       // Store result.
-      PathSegment& path = motion_box.second.path;
-      const MotionBoxState& result_state =
+      PathSegment &path = motion_box.second.path;
+      const MotionBoxState &result_state =
           motion_box.second.box.StateAtFrame(to_frame);
       AddStateToPath(result_state, dst_timestamp_ms, &path);
       // motion_box has got new tracking state/path. Now trimming it.
@@ -1196,8 +1198,8 @@ void BoxTrackerCalculator::StreamTrack(const TrackingData& data,
 }
 
 void BoxTrackerCalculator::FastForwardStartPos(
-    const TimedBoxProtoList& start_pos_list, MotionBoxMap* box_map) {
-  for (const TimedBoxProto& start_pos : start_pos_list.box()) {
+    const TimedBoxProtoList &start_pos_list, MotionBoxMap *box_map) {
+  for (const TimedBoxProto &start_pos : start_pos_list.box()) {
     Timestamp timestamp(start_pos.time_msec() * 1000);
     // Locate corresponding frame number for starting position. As TrackingData
     // stores motion from current to last frame; we are using the data after
@@ -1220,7 +1222,7 @@ void BoxTrackerCalculator::FastForwardStartPos(
     // Locate corresponding tracking data.
     auto start_data = std::find_if(
         tracking_data_cache_.begin(), tracking_data_cache_.end(),
-        [timestamp_pos](const std::pair<Timestamp, TrackingData>& item)
+        [timestamp_pos](const std::pair<Timestamp, TrackingData> &item)
             -> bool { return item.first == timestamp_pos[0]; });
 
     if (start_data == tracking_data_cache_.end()) {
@@ -1260,7 +1262,7 @@ void BoxTrackerCalculator::FastForwardStartPos(
       const int64 curr_duration =
           (cache_pos[0].first.Value() - cache_pos[-1].first.Value()) / 1000;
       StreamTrack(cache_pos->second, curr_frame, curr_time_msec, curr_duration,
-                  true,  // forward
+                  true, // forward
                   &single_map, &failed_box);
       if (!failed_box.empty()) {
         LOG(WARNING) << "Unable to fast forward box at frame " << curr_frame;
@@ -1276,11 +1278,11 @@ void BoxTrackerCalculator::FastForwardStartPos(
                     << "exists already.";
       } else {
         // Add to set of currently tracked boxes.
-        const MotionBoxPath& result = single_map.find(start_pos.id())->second;
+        const MotionBoxPath &result = single_map.find(start_pos.id())->second;
         box_map->emplace(start_pos.id(), result);
       }
     }
   }
 }
 
-}  // namespace mediapipe
+} // namespace mediapipe

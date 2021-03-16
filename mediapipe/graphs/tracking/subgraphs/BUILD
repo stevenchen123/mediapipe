@@ -107,6 +107,20 @@ mediapipe_simple_subgraph(
 )
 
 mediapipe_simple_subgraph(
+    name = "object_detection_cpu_new",
+    graph = "object_detection_cpu_new.pbtxt",
+    register_as = "ObjectDetectionSubgraphCpuNew",
+    deps = [
+        "//mediapipe/calculators/tensor:image_to_tensor_calculator",
+        "//mediapipe/calculators/tflite:ssd_anchors_calculator",
+        "//mediapipe/calculators/tensor:inference_calculator",
+        "//mediapipe/calculators/tensor:tensors_to_detections_calculator",
+        "//mediapipe/calculators/util:detection_label_id_to_text_calculator",
+        "//mediapipe/calculators/util:non_max_suppression_calculator",
+    ],
+)
+
+mediapipe_simple_subgraph(
     name = "renderer_gpu",
     graph = "renderer_gpu.pbtxt",
     register_as = "RendererSubgraphGpu",

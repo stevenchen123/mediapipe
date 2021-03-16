@@ -43,7 +43,7 @@ constexpr double kLabelToBoundingBoxRatio = 0.1;
 // Perserve 2 decimal digits.
 constexpr float kNumScoreDecimalDigitsMultipler = 100;
 
-}  // namespace
+} // namespace
 
 // A calculator that converts Detection proto to RenderData proto for
 // visualization.
@@ -74,56 +74,56 @@ constexpr float kNumScoreDecimalDigitsMultipler = 100;
 //   }
 // }
 class DetectionsToRenderDataCalculator : public CalculatorBase {
- public:
+public:
   DetectionsToRenderDataCalculator() {}
   ~DetectionsToRenderDataCalculator() override {}
-  DetectionsToRenderDataCalculator(const DetectionsToRenderDataCalculator&) =
+  DetectionsToRenderDataCalculator(const DetectionsToRenderDataCalculator &) =
       delete;
-  DetectionsToRenderDataCalculator& operator=(
-      const DetectionsToRenderDataCalculator&) = delete;
+  DetectionsToRenderDataCalculator &
+  operator=(const DetectionsToRenderDataCalculator &) = delete;
 
-  static absl::Status GetContract(CalculatorContract* cc);
+  static absl::Status GetContract(CalculatorContract *cc);
 
-  absl::Status Open(CalculatorContext* cc) override;
+  absl::Status Open(CalculatorContext *cc) override;
 
-  absl::Status Process(CalculatorContext* cc) override;
+  absl::Status Process(CalculatorContext *cc) override;
 
- private:
+private:
   // These utility methods are supposed to be used only by this class. No
   // external client should depend on them. Due to C++ style guide unnamed
   // namespace should not be used in header files. So, these has been defined
   // as private static methods.
   static void SetRenderAnnotationColorThickness(
-      const DetectionsToRenderDataCalculatorOptions& options,
-      RenderAnnotation* render_annotation);
+      const DetectionsToRenderDataCalculatorOptions &options,
+      RenderAnnotation *render_annotation);
 
   static void SetTextCoordinate(bool normalized, double left, double baseline,
-                                RenderAnnotation::Text* text);
+                                RenderAnnotation::Text *text);
 
   static void SetRectCoordinate(bool normalized, double xmin, double ymin,
                                 double width, double height,
-                                RenderAnnotation::Rectangle* rect);
+                                RenderAnnotation::Rectangle *rect);
 
-  static void AddLabels(const Detection& detection,
-                        const DetectionsToRenderDataCalculatorOptions& options,
-                        float text_line_height, RenderData* render_data);
-  static void AddFeatureTag(
-      const Detection& detection,
-      const DetectionsToRenderDataCalculatorOptions& options,
-      float text_line_height, RenderData* render_data);
-  static void AddLocationData(
-      const Detection& detection,
-      const DetectionsToRenderDataCalculatorOptions& options,
-      RenderData* render_data);
+  static void AddLabels(const Detection &detection,
+                        const DetectionsToRenderDataCalculatorOptions &options,
+                        float text_line_height, RenderData *render_data);
+  static void
+  AddFeatureTag(const Detection &detection,
+                const DetectionsToRenderDataCalculatorOptions &options,
+                float text_line_height, RenderData *render_data);
+  static void
+  AddLocationData(const Detection &detection,
+                  const DetectionsToRenderDataCalculatorOptions &options,
+                  RenderData *render_data);
   static void AddDetectionToRenderData(
-      const Detection& detection,
-      const DetectionsToRenderDataCalculatorOptions& options,
-      RenderData* render_data);
+      const Detection &detection,
+      const DetectionsToRenderDataCalculatorOptions &options,
+      RenderData *render_data);
 };
 REGISTER_CALCULATOR(DetectionsToRenderDataCalculator);
 
-absl::Status DetectionsToRenderDataCalculator::GetContract(
-    CalculatorContract* cc) {
+absl::Status
+DetectionsToRenderDataCalculator::GetContract(CalculatorContract *cc) {
   RET_CHECK(cc->Inputs().HasTag(kDetectionListTag) ||
             cc->Inputs().HasTag(kDetectionsTag) ||
             cc->Inputs().HasTag(kDetectionTag))
@@ -142,14 +142,17 @@ absl::Status DetectionsToRenderDataCalculator::GetContract(
   return absl::OkStatus();
 }
 
-absl::Status DetectionsToRenderDataCalculator::Open(CalculatorContext* cc) {
+absl::Status DetectionsToRenderDataCalculator::Open(CalculatorContext *cc) {
   cc->SetOffset(TimestampDiff(0));
 
   return absl::OkStatus();
 }
 
-absl::Status DetectionsToRenderDataCalculator::Process(CalculatorContext* cc) {
-  const auto& options = cc->Options<DetectionsToRenderDataCalculatorOptions>();
+absl::Status DetectionsToRenderDataCalculator::Process(CalculatorContext *cc) {
+  // std::cout << "detections_to_render_data_calculator"
+  //           << " " << cc->NodeName() << " " << cc->NodeId() << " "
+  //           << cc->CalculatorType() << std::endl;
+  const auto &options = cc->Options<DetectionsToRenderDataCalculatorOptions>();
   const bool has_detection_from_list =
       cc->Inputs().HasTag(kDetectionListTag) && !cc->Inputs()
                                                      .Tag(kDetectionListTag)
@@ -171,13 +174,13 @@ absl::Status DetectionsToRenderDataCalculator::Process(CalculatorContext* cc) {
   auto render_data = absl::make_unique<RenderData>();
   render_data->set_scene_class(options.scene_class());
   if (has_detection_from_list) {
-    for (const auto& detection :
+    for (const auto &detection :
          cc->Inputs().Tag(kDetectionListTag).Get<DetectionList>().detection()) {
       AddDetectionToRenderData(detection, options, render_data.get());
     }
   }
   if (has_detection_from_vector) {
-    for (const auto& detection :
+    for (const auto &detection :
          cc->Inputs().Tag(kDetectionsTag).Get<std::vector<Detection>>()) {
       AddDetectionToRenderData(detection, options, render_data.get());
     }
@@ -186,6 +189,8 @@ absl::Status DetectionsToRenderDataCalculator::Process(CalculatorContext* cc) {
     AddDetectionToRenderData(cc->Inputs().Tag(kDetectionTag).Get<Detection>(),
                              options, render_data.get());
   }
+  // std::cout << "    out " << render_data->render_annotations_size() << " "
+  //           << cc->InputTimestamp() << std::endl;
   cc->Outputs()
       .Tag(kRenderDataTag)
       .Add(render_data.release(), cc->InputTimestamp());
@@ -193,8 +198,8 @@ absl::Status DetectionsToRenderDataCalculator::Process(CalculatorContext* cc) {
 }
 
 void DetectionsToRenderDataCalculator::SetRenderAnnotationColorThickness(
-    const DetectionsToRenderDataCalculatorOptions& options,
-    RenderAnnotation* render_annotation) {
+    const DetectionsToRenderDataCalculatorOptions &options,
+    RenderAnnotation *render_annotation) {
   render_annotation->mutable_color()->set_r(options.color().r());
   render_annotation->mutable_color()->set_g(options.color().g());
   render_annotation->mutable_color()->set_b(options.color().b());
@@ -203,7 +208,7 @@ void DetectionsToRenderDataCalculator::SetRenderAnnotationColorThickness(
 
 void DetectionsToRenderDataCalculator::SetTextCoordinate(
     bool normalized, double left, double baseline,
-    RenderAnnotation::Text* text) {
+    RenderAnnotation::Text *text) {
   text->set_normalized(normalized);
   text->set_left(normalized ? std::max(left, 0.0) : left);
   // Normalized coordinates must be between 0.0 and 1.0, if they are used.
@@ -212,10 +217,12 @@ void DetectionsToRenderDataCalculator::SetTextCoordinate(
 
 void DetectionsToRenderDataCalculator::SetRectCoordinate(
     bool normalized, double xmin, double ymin, double width, double height,
-    RenderAnnotation::Rectangle* rect) {
-  if (xmin + width < 0.0 || ymin + height < 0.0) return;
+    RenderAnnotation::Rectangle *rect) {
+  if (xmin + width < 0.0 || ymin + height < 0.0)
+    return;
   if (normalized) {
-    if (xmin > 1.0 || ymin > 1.0) return;
+    if (xmin > 1.0 || ymin > 1.0)
+      return;
   }
   rect->set_normalized(normalized);
   rect->set_left(normalized ? std::max(xmin, 0.0) : xmin);
@@ -230,9 +237,9 @@ void DetectionsToRenderDataCalculator::SetRectCoordinate(
 }
 
 void DetectionsToRenderDataCalculator::AddLabels(
-    const Detection& detection,
-    const DetectionsToRenderDataCalculatorOptions& options,
-    float text_line_height, RenderData* render_data) {
+    const Detection &detection,
+    const DetectionsToRenderDataCalculatorOptions &options,
+    float text_line_height, RenderData *render_data) {
   CHECK(detection.label().empty() || detection.label_id().empty() ||
         detection.label_size() == detection.label_id_size())
       << "String or integer labels should be of same size. Or only one of them "
@@ -271,10 +278,10 @@ void DetectionsToRenderDataCalculator::AddLabels(
   // Add the render annotations for "label(_id),score".
   for (int i = 0; i < labels.size(); ++i) {
     auto label = labels.at(i);
-    auto* label_annotation = render_data->add_render_annotations();
+    auto *label_annotation = render_data->add_render_annotations();
     label_annotation->set_scene_tag(kSceneLabelLabel);
     SetRenderAnnotationColorThickness(options, label_annotation);
-    auto* text = label_annotation->mutable_text();
+    auto *text = label_annotation->mutable_text();
     *text = options.text();
     text->set_display_text(label);
     if (detection.location_data().format() == LocationData::BOUNDING_BOX) {
@@ -294,13 +301,13 @@ void DetectionsToRenderDataCalculator::AddLabels(
 }
 
 void DetectionsToRenderDataCalculator::AddFeatureTag(
-    const Detection& detection,
-    const DetectionsToRenderDataCalculatorOptions& options,
-    float text_line_height, RenderData* render_data) {
-  auto* feature_tag_annotation = render_data->add_render_annotations();
+    const Detection &detection,
+    const DetectionsToRenderDataCalculatorOptions &options,
+    float text_line_height, RenderData *render_data) {
+  auto *feature_tag_annotation = render_data->add_render_annotations();
   feature_tag_annotation->set_scene_tag(kSceneFeatureLabel);
   SetRenderAnnotationColorThickness(options, feature_tag_annotation);
-  auto* feature_tag_text = feature_tag_annotation->mutable_text();
+  auto *feature_tag_text = feature_tag_annotation->mutable_text();
   feature_tag_text->set_display_text(detection.feature_tag());
   if (detection.location_data().format() == LocationData::BOUNDING_BOX) {
     SetTextCoordinate(false, detection.location_data().bounding_box().xmin(),
@@ -318,13 +325,13 @@ void DetectionsToRenderDataCalculator::AddFeatureTag(
 }
 
 void DetectionsToRenderDataCalculator::AddLocationData(
-    const Detection& detection,
-    const DetectionsToRenderDataCalculatorOptions& options,
-    RenderData* render_data) {
-  auto* location_data_annotation = render_data->add_render_annotations();
+    const Detection &detection,
+    const DetectionsToRenderDataCalculatorOptions &options,
+    RenderData *render_data) {
+  auto *location_data_annotation = render_data->add_render_annotations();
   location_data_annotation->set_scene_tag(kSceneLocationLabel);
   SetRenderAnnotationColorThickness(options, location_data_annotation);
-  auto* location_data_rect = location_data_annotation->mutable_rectangle();
+  auto *location_data_rect = location_data_annotation->mutable_rectangle();
   if (detection.location_data().format() == LocationData::BOUNDING_BOX) {
     SetRectCoordinate(false, detection.location_data().bounding_box().xmin(),
                       detection.location_data().bounding_box().ymin(),
@@ -342,10 +349,10 @@ void DetectionsToRenderDataCalculator::AddLocationData(
     if (detection.location_data().relative_keypoints_size()) {
       for (int i = 0; i < detection.location_data().relative_keypoints_size();
            ++i) {
-        auto* keypoint_data_annotation = render_data->add_render_annotations();
+        auto *keypoint_data_annotation = render_data->add_render_annotations();
         keypoint_data_annotation->set_scene_tag(kKeypointLabel);
         SetRenderAnnotationColorThickness(options, keypoint_data_annotation);
-        auto* keypoint_data = keypoint_data_annotation->mutable_point();
+        auto *keypoint_data = keypoint_data_annotation->mutable_point();
         keypoint_data->set_normalized(true);
         // See location_data.proto for detail.
         keypoint_data->set_x(
@@ -358,9 +365,9 @@ void DetectionsToRenderDataCalculator::AddLocationData(
 }
 
 void DetectionsToRenderDataCalculator::AddDetectionToRenderData(
-    const Detection& detection,
-    const DetectionsToRenderDataCalculatorOptions& options,
-    RenderData* render_data) {
+    const Detection &detection,
+    const DetectionsToRenderDataCalculatorOptions &options,
+    RenderData *render_data) {
   CHECK(detection.location_data().format() == LocationData::BOUNDING_BOX ||
         detection.location_data().format() ==
             LocationData::RELATIVE_BOUNDING_BOX)
@@ -383,4 +390,4 @@ void DetectionsToRenderDataCalculator::AddDetectionToRenderData(
   AddFeatureTag(detection, options, text_line_height, render_data);
   AddLocationData(detection, options, render_data);
 }
-}  // namespace mediapipe
+} // namespace mediapipe

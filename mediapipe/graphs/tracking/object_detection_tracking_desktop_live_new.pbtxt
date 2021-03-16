@@ -1,0 +1,92 @@
+# MediaPipe graph that performs object detection and tracking with TensorFlow
+# Lite on CPU.
+# Used in the examples in
+# mediapipie/examples/desktop/object_tracking/
+
+
+# max_queue_size limits the number of packets enqueued on any input stream
+# by throttling inputs to the graph. This makes the graph only process one
+# frame per time.
+# max_queue_size: 1
+
+# Images on CPU coming into and out of the graph.
+input_stream: "input_video"
+output_stream: "output_video"
+
+# Resamples the images by specific frame rate. This calculator is used to
+# control the frequecy of subsequent calculators/subgraphs, e.g. less power
+# consumption for expensive process.
+# node {
+#   calculator: "PacketResamplerCalculator"
+#   input_stream: "DATA:input_video"
+#   output_stream: "DATA:throttled_input_video"
+#   node_options: {
+#     [type.googleapis.com/mediapipe.PacketResamplerCalculatorOptions] {
+#       frame_rate: 8
+#     }
+#   }
+# }
+
+# Subgraph that detections objects (see object_detection_cpu_new.pbtxt).
+node {
+  calculator: "ObjectDetectionSubgraphCpuNew"
+  # input_stream: "IMAGE:throttled_input_video"
+  input_stream: "IMAGE:input_video"
+  output_stream: "DETECTIONS:fbf_detections"
+}
+
+# Converts the detections to drawing primitives for annotation overlay.
+node {
+  calculator: "DetectionsToRenderDataCalculator"
+  input_stream: "DETECTIONS:fbf_detections"
+  output_stream: "RENDER_DATA:fbf_render_data"
+  node_options: {
+    [type.googleapis.com/mediapipe.DetectionsToRenderDataCalculatorOptions] {
+      thickness: 4.0
+      color { r: 0 g: 0 b: 255 }
+    }
+  }
+}
+
+# Subgraph that tracks objects (see object_tracking_cpu.pbtxt).
+node {
+  calculator: "ObjectTrackingSubgraphCpu"
+  input_stream: "VIDEO:input_video"
+  input_stream: "DETECTIONS:fbf_detections"
+  output_stream: "DETECTIONS:tracked_detections"
+}
+
+# Converts the detections to drawing primitives for annotation overlay.
+node {
+  calculator: "DetectionsToRenderDataCalculator"
+  input_stream: "DETECTIONS:tracked_detections"
+  output_stream: "RENDER_DATA:tracked_render_data"
+  node_options: {
+    [type.googleapis.com/mediapipe.DetectionsToRenderDataCalculatorOptions] {
+      thickness: 4.0
+      color { r: 255 g: 0 b: 0 }
+      render_detection_id: true
+    }
+  }
+}
+
+# Draws annotations and overlays them on top of the input images.
+node {
+  calculator: "AnnotationOverlayCalculator"
+  input_stream: "IMAGE:input_video"
+  input_stream: "fbf_render_data"
+  input_stream: "tracked_render_data"
+  output_stream: "IMAGE:output_video"
+}
+
+
+# Subgraph that renders annotations and overlays them on top of input images (see renderer_cpu.pbtxt).
+# node {
+#   calculator: "RendererSubgraphCpu"
+#   input_stream: "IMAGE:input_video"
+#   # input_stream: "IMAGE:input_video_with_fbf_detections"
+#   input_stream: "DETECTIONS:tracked_detections"
+#   # input_stream: "DETECTIONS:output_detections"
+#   output_stream: "IMAGE:output_video"
+# }
+

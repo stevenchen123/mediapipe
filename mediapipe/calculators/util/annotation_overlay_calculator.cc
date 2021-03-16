@@ -36,7 +36,7 @@
 #include "mediapipe/gpu/gl_simple_shaders.h"
 #include "mediapipe/gpu/gpu_buffer.h"
 #include "mediapipe/gpu/shader_util.h"
-#endif  // !MEDIAPIPE_DISABLE_GPU
+#endif // !MEDIAPIPE_DISABLE_GPU
 
 namespace mediapipe {
 
@@ -49,16 +49,16 @@ constexpr char kImageFrameTag[] = "IMAGE";
 enum { ATTRIB_VERTEX, ATTRIB_TEXTURE_POSITION, NUM_ATTRIBUTES };
 
 // Round up n to next multiple of m.
-size_t RoundUp(size_t n, size_t m) { return ((n + m - 1) / m) * m; }  // NOLINT
+size_t RoundUp(size_t n, size_t m) { return ((n + m - 1) / m) * m; } // NOLINT
 
 // When using GPU, this color will become transparent when the calculator
 // merges the annotation overlay with the image frame. As a result, drawing in
 // this color is not supported and it should be set to something unlikely used.
-constexpr uchar kAnnotationBackgroundColor = 2;  // Grayscale value.
+constexpr uchar kAnnotationBackgroundColor = 2; // Grayscale value.
 
 // Future Image type.
-inline bool HasImageTag(mediapipe::CalculatorContext* cc) { return false; }
-}  // namespace
+inline bool HasImageTag(mediapipe::CalculatorContext *cc) { return false; }
+} // namespace
 
 // A calculator for rendering data on images.
 //
@@ -120,33 +120,33 @@ inline bool HasImageTag(mediapipe::CalculatorContext* cc) { return false; }
 // }
 //
 class AnnotationOverlayCalculator : public CalculatorBase {
- public:
+public:
   AnnotationOverlayCalculator() = default;
   ~AnnotationOverlayCalculator() override = default;
 
-  static absl::Status GetContract(CalculatorContract* cc);
+  static absl::Status GetContract(CalculatorContract *cc);
 
   // From Calculator.
-  absl::Status Open(CalculatorContext* cc) override;
-  absl::Status Process(CalculatorContext* cc) override;
-  absl::Status Close(CalculatorContext* cc) override;
+  absl::Status Open(CalculatorContext *cc) override;
+  absl::Status Process(CalculatorContext *cc) override;
+  absl::Status Close(CalculatorContext *cc) override;
 
- private:
-  absl::Status CreateRenderTargetCpu(CalculatorContext* cc,
-                                     std::unique_ptr<cv::Mat>& image_mat,
-                                     ImageFormat::Format* target_format);
-  template <typename Type, const char* Tag>
-  absl::Status CreateRenderTargetGpu(CalculatorContext* cc,
-                                     std::unique_ptr<cv::Mat>& image_mat);
-  template <typename Type, const char* Tag>
-  absl::Status RenderToGpu(CalculatorContext* cc, uchar* overlay_image);
-  absl::Status RenderToCpu(CalculatorContext* cc,
-                           const ImageFormat::Format& target_format,
-                           uchar* data_image);
+private:
+  absl::Status CreateRenderTargetCpu(CalculatorContext *cc,
+                                     std::unique_ptr<cv::Mat> &image_mat,
+                                     ImageFormat::Format *target_format);
+  template <typename Type, const char *Tag>
+  absl::Status CreateRenderTargetGpu(CalculatorContext *cc,
+                                     std::unique_ptr<cv::Mat> &image_mat);
+  template <typename Type, const char *Tag>
+  absl::Status RenderToGpu(CalculatorContext *cc, uchar *overlay_image);
+  absl::Status RenderToCpu(CalculatorContext *cc,
+                           const ImageFormat::Format &target_format,
+                           uchar *data_image);
 
-  absl::Status GlRender(CalculatorContext* cc);
-  template <typename Type, const char* Tag>
-  absl::Status GlSetup(CalculatorContext* cc);
+  absl::Status GlRender(CalculatorContext *cc);
+  template <typename Type, const char *Tag>
+  absl::Status GlSetup(CalculatorContext *cc);
 
   // Options for the calculator.
   AnnotationOverlayCalculatorOptions options_;
@@ -162,16 +162,16 @@ class AnnotationOverlayCalculator : public CalculatorBase {
 #if !MEDIAPIPE_DISABLE_GPU
   mediapipe::GlCalculatorHelper gpu_helper_;
   GLuint program_ = 0;
-  GLuint image_mat_tex_ = 0;  // Overlay drawing image for GPU.
+  GLuint image_mat_tex_ = 0; // Overlay drawing image for GPU.
   int width_ = 0;
   int height_ = 0;
-  int width_canvas_ = 0;  // Size of overlay drawing texture canvas.
+  int width_canvas_ = 0; // Size of overlay drawing texture canvas.
   int height_canvas_ = 0;
-#endif  // MEDIAPIPE_DISABLE_GPU
+#endif // MEDIAPIPE_DISABLE_GPU
 };
 REGISTER_CALCULATOR(AnnotationOverlayCalculator);
 
-absl::Status AnnotationOverlayCalculator::GetContract(CalculatorContract* cc) {
+absl::Status AnnotationOverlayCalculator::GetContract(CalculatorContract *cc) {
   CHECK_GE(cc->Inputs().NumEntries(), 1);
 
   bool use_gpu = false;
@@ -192,7 +192,7 @@ absl::Status AnnotationOverlayCalculator::GetContract(CalculatorContract* cc) {
     CHECK(cc->Outputs().HasTag(kGpuBufferTag));
     use_gpu = true;
   }
-#endif  // !MEDIAPIPE_DISABLE_GPU
+#endif // !MEDIAPIPE_DISABLE_GPU
   if (cc->Inputs().HasTag(kImageFrameTag)) {
     cc->Inputs().Tag(kImageFrameTag).Set<ImageFrame>();
     CHECK(cc->Outputs().HasTag(kImageFrameTag));
@@ -216,7 +216,7 @@ absl::Status AnnotationOverlayCalculator::GetContract(CalculatorContract* cc) {
   if (cc->Outputs().HasTag(kGpuBufferTag)) {
     cc->Outputs().Tag(kGpuBufferTag).Set<mediapipe::GpuBuffer>();
   }
-#endif  // !MEDIAPIPE_DISABLE_GPU
+#endif // !MEDIAPIPE_DISABLE_GPU
   if (cc->Outputs().HasTag(kImageFrameTag)) {
     cc->Outputs().Tag(kImageFrameTag).Set<ImageFrame>();
   }
@@ -224,20 +224,20 @@ absl::Status AnnotationOverlayCalculator::GetContract(CalculatorContract* cc) {
   if (use_gpu) {
 #if !MEDIAPIPE_DISABLE_GPU
     MP_RETURN_IF_ERROR(mediapipe::GlCalculatorHelper::UpdateContract(cc));
-#endif  // !MEDIAPIPE_DISABLE_GPU
+#endif // !MEDIAPIPE_DISABLE_GPU
   }
 
   return absl::OkStatus();
 }
 
-absl::Status AnnotationOverlayCalculator::Open(CalculatorContext* cc) {
+absl::Status AnnotationOverlayCalculator::Open(CalculatorContext *cc) {
   cc->SetOffset(TimestampDiff(0));
 
   options_ = cc->Options<AnnotationOverlayCalculatorOptions>();
   if (cc->Inputs().HasTag(kGpuBufferTag) || HasImageTag(cc)) {
 #if !MEDIAPIPE_DISABLE_GPU
     use_gpu_ = true;
-#endif  // !MEDIAPIPE_DISABLE_GPU
+#endif // !MEDIAPIPE_DISABLE_GPU
   }
 
   if (cc->Inputs().HasTag(kGpuBufferTag) ||
@@ -251,27 +251,31 @@ absl::Status AnnotationOverlayCalculator::Open(CalculatorContext* cc) {
   // Initialize the helper renderer library.
   renderer_ = absl::make_unique<AnnotationRenderer>();
   renderer_->SetFlipTextVertically(options_.flip_text_vertically());
-  if (use_gpu_) renderer_->SetScaleFactor(options_.gpu_scale_factor());
+  if (use_gpu_)
+    renderer_->SetScaleFactor(options_.gpu_scale_factor());
 
   // Set the output header based on the input header (if present).
-  const char* tag = use_gpu_ ? kGpuBufferTag : kImageFrameTag;
+  const char *tag = use_gpu_ ? kGpuBufferTag : kImageFrameTag;
   if (image_frame_available_ && !cc->Inputs().Tag(tag).Header().IsEmpty()) {
-    const auto& input_header =
+    const auto &input_header =
         cc->Inputs().Tag(tag).Header().Get<VideoHeader>();
-    auto* output_video_header = new VideoHeader(input_header);
+    auto *output_video_header = new VideoHeader(input_header);
     cc->Outputs().Tag(tag).SetHeader(Adopt(output_video_header));
   }
 
   if (use_gpu_) {
 #if !MEDIAPIPE_DISABLE_GPU
     MP_RETURN_IF_ERROR(gpu_helper_.Open(cc));
-#endif  // !MEDIAPIPE_DISABLE_GPU
+#endif // !MEDIAPIPE_DISABLE_GPU
   }
 
   return absl::OkStatus();
 }
 
-absl::Status AnnotationOverlayCalculator::Process(CalculatorContext* cc) {
+absl::Status AnnotationOverlayCalculator::Process(CalculatorContext *cc) {
+  // std::cout << "hello world annotation_overlay_calculator  "
+  //           << cc->Inputs().NumEntries() << " " << cc->InputTimestamp()
+  //           << std::endl;
   // Initialize render target, drawn with OpenCV.
   std::unique_ptr<cv::Mat> image_mat;
   ImageFormat::Format target_format;
@@ -289,7 +293,7 @@ absl::Status AnnotationOverlayCalculator::Process(CalculatorContext* cc) {
           (CreateRenderTargetGpu<mediapipe::GpuBuffer, kGpuBufferTag>(
               cc, image_mat)));
     }
-#endif  // !MEDIAPIPE_DISABLE_GPU
+#endif // !MEDIAPIPE_DISABLE_GPU
   } else {
     if (cc->Outputs().HasTag(kImageFrameTag)) {
       MP_RETURN_IF_ERROR(CreateRenderTargetCpu(cc, image_mat, &target_format));
@@ -312,13 +316,13 @@ absl::Status AnnotationOverlayCalculator::Process(CalculatorContext* cc) {
     }
     if (tag.empty()) {
       // Empty tag defaults to accepting a single object of RenderData type.
-      const RenderData& render_data = cc->Inputs().Get(id).Get<RenderData>();
+      const RenderData &render_data = cc->Inputs().Get(id).Get<RenderData>();
       renderer_->RenderDataOnImage(render_data);
     } else {
       RET_CHECK_EQ(kVectorTag, tag);
-      const std::vector<RenderData>& render_data_vec =
+      const std::vector<RenderData> &render_data_vec =
           cc->Inputs().Get(id).Get<std::vector<RenderData>>();
-      for (const RenderData& render_data : render_data_vec) {
+      for (const RenderData &render_data : render_data_vec) {
         renderer_->RenderDataOnImage(render_data);
       }
     }
@@ -327,38 +331,40 @@ absl::Status AnnotationOverlayCalculator::Process(CalculatorContext* cc) {
   if (use_gpu_) {
 #if !MEDIAPIPE_DISABLE_GPU
     // Overlay rendered image in OpenGL, onto a copy of input.
-    uchar* image_mat_ptr = image_mat->data;
+    uchar *image_mat_ptr = image_mat->data;
     MP_RETURN_IF_ERROR(
         gpu_helper_.RunInGlContext([this, cc, image_mat_ptr]() -> absl::Status {
           return RenderToGpu<mediapipe::GpuBuffer, kGpuBufferTag>(
               cc, image_mat_ptr);
         }));
-#endif  // !MEDIAPIPE_DISABLE_GPU
+#endif // !MEDIAPIPE_DISABLE_GPU
   } else {
     // Copy the rendered image to output.
-    uchar* image_mat_ptr = image_mat->data;
+    uchar *image_mat_ptr = image_mat->data;
     MP_RETURN_IF_ERROR(RenderToCpu(cc, target_format, image_mat_ptr));
   }
 
   return absl::OkStatus();
 }
 
-absl::Status AnnotationOverlayCalculator::Close(CalculatorContext* cc) {
+absl::Status AnnotationOverlayCalculator::Close(CalculatorContext *cc) {
 #if !MEDIAPIPE_DISABLE_GPU
   gpu_helper_.RunInGlContext([this] {
-    if (program_) glDeleteProgram(program_);
+    if (program_)
+      glDeleteProgram(program_);
     program_ = 0;
-    if (image_mat_tex_) glDeleteTextures(1, &image_mat_tex_);
+    if (image_mat_tex_)
+      glDeleteTextures(1, &image_mat_tex_);
     image_mat_tex_ = 0;
   });
-#endif  // !MEDIAPIPE_DISABLE_GPU
+#endif // !MEDIAPIPE_DISABLE_GPU
 
   return absl::OkStatus();
 }
 
 absl::Status AnnotationOverlayCalculator::RenderToCpu(
-    CalculatorContext* cc, const ImageFormat::Format& target_format,
-    uchar* data_image) {
+    CalculatorContext *cc, const ImageFormat::Format &target_format,
+    uchar *data_image) {
   auto output_frame = absl::make_unique<ImageFrame>(
       target_format, renderer_->GetImageWidth(), renderer_->GetImageHeight());
 
@@ -370,7 +376,7 @@ absl::Status AnnotationOverlayCalculator::RenderToCpu(
   output_frame->CopyPixelData(target_format, renderer_->GetImageWidth(),
                               renderer_->GetImageHeight(), data_image,
                               ImageFrame::kDefaultAlignmentBoundary);
-#endif  // !MEDIAPIPE_DISABLE_GPU
+#endif // !MEDIAPIPE_DISABLE_GPU
 
   if (cc->Outputs().HasTag(kImageFrameTag)) {
     cc->Outputs()
@@ -381,12 +387,12 @@ absl::Status AnnotationOverlayCalculator::RenderToCpu(
   return absl::OkStatus();
 }
 
-template <typename Type, const char* Tag>
-absl::Status AnnotationOverlayCalculator::RenderToGpu(CalculatorContext* cc,
-                                                      uchar* overlay_image) {
+template <typename Type, const char *Tag>
+absl::Status AnnotationOverlayCalculator::RenderToGpu(CalculatorContext *cc,
+                                                      uchar *overlay_image) {
 #if !MEDIAPIPE_DISABLE_GPU
   // Source and destination textures.
-  const auto& input_frame = cc->Inputs().Tag(Tag).Get<Type>();
+  const auto &input_frame = cc->Inputs().Tag(Tag).Get<Type>();
   auto input_texture = gpu_helper_.CreateSourceTexture(input_frame);
 
   auto output_texture = gpu_helper_.CreateDestinationTexture(
@@ -402,7 +408,7 @@ absl::Status AnnotationOverlayCalculator::RenderToGpu(CalculatorContext* cc,
 
   // Blend overlay image in GPU shader.
   {
-    gpu_helper_.BindFramebuffer(output_texture);  // GL_TEXTURE0
+    gpu_helper_.BindFramebuffer(output_texture); // GL_TEXTURE0
 
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, input_texture.name());
@@ -425,35 +431,35 @@ absl::Status AnnotationOverlayCalculator::RenderToGpu(CalculatorContext* cc,
   // Cleanup
   input_texture.Release();
   output_texture.Release();
-#endif  // !MEDIAPIPE_DISABLE_GPU
+#endif // !MEDIAPIPE_DISABLE_GPU
 
   return absl::OkStatus();
 }
 
 absl::Status AnnotationOverlayCalculator::CreateRenderTargetCpu(
-    CalculatorContext* cc, std::unique_ptr<cv::Mat>& image_mat,
-    ImageFormat::Format* target_format) {
+    CalculatorContext *cc, std::unique_ptr<cv::Mat> &image_mat,
+    ImageFormat::Format *target_format) {
   if (image_frame_available_) {
-    const auto& input_frame =
+    const auto &input_frame =
         cc->Inputs().Tag(kImageFrameTag).Get<ImageFrame>();
 
     int target_mat_type;
     switch (input_frame.Format()) {
-      case ImageFormat::SRGBA:
-        *target_format = ImageFormat::SRGBA;
-        target_mat_type = CV_8UC4;
-        break;
-      case ImageFormat::SRGB:
-        *target_format = ImageFormat::SRGB;
-        target_mat_type = CV_8UC3;
-        break;
-      case ImageFormat::GRAY8:
-        *target_format = ImageFormat::SRGB;
-        target_mat_type = CV_8UC3;
-        break;
-      default:
-        return absl::UnknownError("Unexpected image frame format.");
-        break;
+    case ImageFormat::SRGBA:
+      *target_format = ImageFormat::SRGBA;
+      target_mat_type = CV_8UC4;
+      break;
+    case ImageFormat::SRGB:
+      *target_format = ImageFormat::SRGB;
+      target_mat_type = CV_8UC3;
+      break;
+    case ImageFormat::GRAY8:
+      *target_format = ImageFormat::SRGB;
+      target_mat_type = CV_8UC3;
+      break;
+    default:
+      return absl::UnknownError("Unexpected image frame format.");
+      break;
     }
 
     image_mat = absl::make_unique<cv::Mat>(
@@ -478,12 +484,12 @@ absl::Status AnnotationOverlayCalculator::CreateRenderTargetCpu(
   return absl::OkStatus();
 }
 
-template <typename Type, const char* Tag>
+template <typename Type, const char *Tag>
 absl::Status AnnotationOverlayCalculator::CreateRenderTargetGpu(
-    CalculatorContext* cc, std::unique_ptr<cv::Mat>& image_mat) {
+    CalculatorContext *cc, std::unique_ptr<cv::Mat> &image_mat) {
 #if !MEDIAPIPE_DISABLE_GPU
   if (image_frame_available_) {
-    const auto& input_frame = cc->Inputs().Tag(Tag).Get<Type>();
+    const auto &input_frame = cc->Inputs().Tag(Tag).Get<Type>();
     const mediapipe::ImageFormat::Format format =
         mediapipe::ImageFormatForGpuBufferFormat(input_frame.format());
     if (format != mediapipe::ImageFormat::SRGBA &&
@@ -499,24 +505,24 @@ absl::Status AnnotationOverlayCalculator::CreateRenderTargetGpu(
         cv::Scalar(options_.canvas_color().r(), options_.canvas_color().g(),
                    options_.canvas_color().b()));
   }
-#endif  // !MEDIAPIPE_DISABLE_GPU
+#endif // !MEDIAPIPE_DISABLE_GPU
 
   return absl::OkStatus();
 }
 
-absl::Status AnnotationOverlayCalculator::GlRender(CalculatorContext* cc) {
+absl::Status AnnotationOverlayCalculator::GlRender(CalculatorContext *cc) {
 #if !MEDIAPIPE_DISABLE_GPU
   static const GLfloat square_vertices[] = {
-      -1.0f, -1.0f,  // bottom left
-      1.0f,  -1.0f,  // bottom right
-      -1.0f, 1.0f,   // top left
-      1.0f,  1.0f,   // top right
+      -1.0f, -1.0f, // bottom left
+      1.0f,  -1.0f, // bottom right
+      -1.0f, 1.0f,  // top left
+      1.0f,  1.0f,  // top right
   };
   static const GLfloat texture_vertices[] = {
-      0.0f, 0.0f,  // bottom left
-      1.0f, 0.0f,  // bottom right
-      0.0f, 1.0f,  // top left
-      1.0f, 1.0f,  // top right
+      0.0f, 0.0f, // bottom left
+      1.0f, 0.0f, // bottom right
+      0.0f, 1.0f, // top left
+      1.0f, 1.0f, // top right
   };
 
   // program
@@ -553,19 +559,19 @@ absl::Status AnnotationOverlayCalculator::GlRender(CalculatorContext* cc) {
   glBindVertexArray(0);
   glDeleteVertexArrays(1, &vao);
   glDeleteBuffers(2, vbo);
-#endif  // !MEDIAPIPE_DISABLE_GPU
+#endif // !MEDIAPIPE_DISABLE_GPU
 
   return absl::OkStatus();
 }
 
-template <typename Type, const char* Tag>
-absl::Status AnnotationOverlayCalculator::GlSetup(CalculatorContext* cc) {
+template <typename Type, const char *Tag>
+absl::Status AnnotationOverlayCalculator::GlSetup(CalculatorContext *cc) {
 #if !MEDIAPIPE_DISABLE_GPU
   const GLint attr_location[NUM_ATTRIBUTES] = {
       ATTRIB_VERTEX,
       ATTRIB_TEXTURE_POSITION,
   };
-  const GLchar* attr_name[NUM_ATTRIBUTES] = {
+  const GLchar *attr_name[NUM_ATTRIBUTES] = {
       "position",
       "texture_coordinate",
   };
@@ -618,7 +624,7 @@ absl::Status AnnotationOverlayCalculator::GlSetup(CalculatorContext* cc) {
 
   // Create shader program and set parameters
   mediapipe::GlhCreateProgram(mediapipe::kBasicVertexShader, frag_src.c_str(),
-                              NUM_ATTRIBUTES, (const GLchar**)&attr_name[0],
+                              NUM_ATTRIBUTES, (const GLchar **)&attr_name[0],
                               attr_location, &program_);
   RET_CHECK(program_) << "Problem initializing the program.";
   glUseProgram(program_);
@@ -633,7 +639,7 @@ absl::Status AnnotationOverlayCalculator::GlSetup(CalculatorContext* cc) {
   const float alignment = ImageFrame::kGlDefaultAlignmentBoundary;
   const float scale_factor = options_.gpu_scale_factor();
   if (image_frame_available_) {
-    const auto& input_frame = cc->Inputs().Tag(Tag).Get<Type>();
+    const auto &input_frame = cc->Inputs().Tag(Tag).Get<Type>();
     width_ = RoundUp(input_frame.width(), alignment);
     height_ = RoundUp(input_frame.height(), alignment);
   } else {
@@ -657,9 +663,9 @@ absl::Status AnnotationOverlayCalculator::GlSetup(CalculatorContext* cc) {
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glBindTexture(GL_TEXTURE_2D, 0);
   }
-#endif  // !MEDIAPIPE_DISABLE_GPU
+#endif // !MEDIAPIPE_DISABLE_GPU
 
   return absl::OkStatus();
 }
 
-}  // namespace mediapipe
+} // namespace mediapipe
