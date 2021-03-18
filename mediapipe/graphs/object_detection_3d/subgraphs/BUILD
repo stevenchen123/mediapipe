@@ -27,11 +27,88 @@ mediapipe_simple_subgraph(
     register_as = "RendererSubgraph",
     visibility = ["//visibility:public"],
     deps = [
+        ":renderer_multilandmarks_cpu",
+        "//mediapipe/calculators/util:annotation_overlay_calculator",
+        "//mediapipe/calculators/util:rect_to_render_data_calculator",
+    ],
+)
+
+mediapipe_simple_subgraph(
+    name = "renderer_multilandmarks_cpu",
+    graph = "renderer_multi_landmarks_cpu.pbtxt",
+    register_as = "RendererMultiLandmarksSubgraph",
+    visibility = ["//visibility:public"],
+    deps = [
         "//mediapipe/calculators/core:begin_loop_calculator",
         "//mediapipe/calculators/core:end_loop_calculator",
-        "//mediapipe/calculators/util:annotation_overlay_calculator",
-        "//mediapipe/calculators/util:detections_to_render_data_calculator",
         "//mediapipe/calculators/util:landmarks_to_render_data_calculator",
-        "//mediapipe/calculators/util:rect_to_render_data_calculator",
+    ],
+)
+
+mediapipe_simple_subgraph(
+    name = "renderer_tracking_cpu",
+    graph = "renderer_tracking_cpu.pbtxt",
+    register_as = "RendererTrackingSubgraphCpu",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":renderer_multilandmarks_cpu",
+        "//mediapipe/calculators/util:detections_to_render_data_calculator",
+        "//mediapipe/calculators/core:begin_loop_calculator",
+        "//mediapipe/calculators/core:end_loop_calculator",
+        "//mediapipe/calculators/util:landmarks_to_render_data_calculator",
+        "//mediapipe/calculators/util:annotation_overlay_calculator",
+    ],
+)
+
+mediapipe_simple_subgraph(
+    name = "object_detection_cpu_new",
+    graph = "object_detection_cpu_new.pbtxt",
+    register_as = "ObjectDetectionSubgraphCpuNew",
+    deps = [
+        "//mediapipe/calculators/tensor:image_to_tensor_calculator",
+        "//mediapipe/calculators/tflite:ssd_anchors_calculator",
+        "//mediapipe/calculators/tensor:inference_calculator",
+        "//mediapipe/calculators/tensor:tensors_to_detections_calculator",
+        "//mediapipe/calculators/util:detection_label_id_to_text_calculator",
+        "//mediapipe/calculators/util:non_max_suppression_calculator",
+        "//mediapipe/modules/objectron/calculators:filter_detection_calculator",
+    ],
+)
+
+mediapipe_simple_subgraph(
+    name = "object_tracking_cpu",
+    graph = "object_tracking_cpu.pbtxt",
+    register_as = "ObjectTrackingSubgraphCpu",
+    deps = [
+        "//mediapipe/calculators/util:detection_unique_id_calculator",
+        "//mediapipe/calculators/util:detections_to_timed_box_list_calculator",
+        "//mediapipe/calculators/video:tracked_detection_manager_calculator",
+        "//mediapipe/framework/stream_handler:sync_set_input_stream_handler",
+        "//mediapipe/graphs/tracking/subgraphs:box_tracking_cpu",
+    ],
+)
+
+mediapipe_simple_subgraph(
+    name = "object_detection_3d_cpu",
+    graph = "object_detection_3d_cpu.pbtxt",
+    register_as = "ObjectDetection3dCpuSubgraph",
+    deps = [
+        "//mediapipe/modules/objectron:box_landmark_cpu",
+        "//mediapipe/modules/objectron:object_detection_oid_v4_cpu",
+        "//mediapipe/calculators/core:begin_loop_calculator",
+        "//mediapipe/calculators/core:clip_vector_size_calculator",
+        "//mediapipe/calculators/core:constant_side_packet_calculator",
+        "//mediapipe/calculators/core:end_loop_calculator",
+        "//mediapipe/calculators/core:gate_calculator",
+        "//mediapipe/calculators/core:previous_loopback_calculator",
+        "//mediapipe/calculators/image:image_properties_calculator",
+        "//mediapipe/calculators/tflite:tflite_model_calculator",
+        "//mediapipe/calculators/util:association_norm_rect_calculator",
+        "//mediapipe/calculators/util:collection_has_min_size_calculator",
+        "//mediapipe/calculators/util:detections_to_rects_calculator",
+        "//mediapipe/calculators/util:local_file_contents_calculator",
+        "//mediapipe/modules/objectron/calculators:frame_annotation_to_rect_calculator",
+        "//mediapipe/modules/objectron/calculators:landmarks_to_frame_annotation_calculator",
+        "//mediapipe/modules/objectron/calculators:lift_2d_frame_annotation_to_3d_calculator",
     ],
 )

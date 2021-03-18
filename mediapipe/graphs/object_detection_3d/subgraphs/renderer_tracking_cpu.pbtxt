@@ -1,0 +1,56 @@
+# MediaPipe Objectron vertices/landmarks rendering CPU subgraph.
+
+type: "RendererTrackingSubgraphCpu"
+
+input_stream: "IMAGE:input_image"
+input_stream: "MULTI_LANDMARKS:multi_landmarks"
+input_stream: "DETECTIONS:0:fbf_detections"
+input_stream: "DETECTIONS:1:tracked_detections"
+output_stream: "IMAGE:output_image"
+
+
+
+# Subgraph that converts multilandmarks to renderable data.
+node {
+  calculator: "RendererMultiLandmarksSubgraph"
+  input_stream: "MULTI_LANDMARKS:multi_landmarks"
+  output_stream: "RENDER_DATA:multi_landmarks_render_data"
+}
+
+
+# Converts the detections to drawing primitives for annotation overlay.
+node {
+  calculator: "DetectionsToRenderDataCalculator"
+  input_stream: "DETECTIONS:fbf_detections"
+  output_stream: "RENDER_DATA:fbf_render_data"
+  node_options: {
+    [type.googleapis.com/mediapipe.DetectionsToRenderDataCalculatorOptions] {
+      thickness: 4.0
+      color { r: 0 g: 0 b: 255 }
+    }
+  }
+}
+
+# Converts the detections to drawing primitives for annotation overlay.
+node {
+  calculator: "DetectionsToRenderDataCalculator"
+  input_stream: "DETECTIONS:tracked_detections"
+  output_stream: "RENDER_DATA:tracked_render_data"
+  node_options: {
+    [type.googleapis.com/mediapipe.DetectionsToRenderDataCalculatorOptions] {
+      thickness: 4.0
+      color { r: 255 g: 0 b: 0 }
+      render_detection_id: true
+    }
+  }
+}
+
+# Draws annotations and overlays them on top of the input images.
+node {
+  calculator: "AnnotationOverlayCalculator"
+  input_stream: "IMAGE:input_image"
+  input_stream: "VECTOR:multi_landmarks_render_data"
+  input_stream: "fbf_render_data"
+  input_stream: "tracked_render_data"
+  output_stream: "IMAGE:output_image"
+}

@@ -43,7 +43,7 @@ using mediapipe::RE2;
 using Detections = std::vector<Detection>;
 using Strings = std::vector<std::string>;
 
-}  // namespace
+} // namespace
 
 // Filters the entries in a Detection to only those with valid scores
 // for the specified allowed labels. Allowed labels are provided as a
@@ -71,14 +71,14 @@ using Strings = std::vector<std::string>;
 // }
 
 struct FirstGreaterComparator {
-  bool operator()(const std::pair<float, int>& a,
-                  const std::pair<float, int>& b) const {
+  bool operator()(const std::pair<float, int> &a,
+                  const std::pair<float, int> &b) const {
     return a.first > b.first;
   }
 };
 
-absl::Status SortLabelsByDecreasingScore(const Detection& detection,
-                                         Detection* sorted_detection) {
+absl::Status SortLabelsByDecreasingScore(const Detection &detection,
+                                         Detection *sorted_detection) {
   RET_CHECK(sorted_detection);
   RET_CHECK_EQ(detection.score_size(), detection.label_size());
   if (!detection.label_id().empty()) {
@@ -114,13 +114,13 @@ absl::Status SortLabelsByDecreasingScore(const Detection& detection,
 }
 
 class FilterDetectionCalculator : public CalculatorBase {
- public:
-  static absl::Status GetContract(CalculatorContract* cc);
-  absl::Status Open(CalculatorContext* cc) override;
-  absl::Status Process(CalculatorContext* cc) override;
+public:
+  static absl::Status GetContract(CalculatorContract *cc);
+  absl::Status Open(CalculatorContext *cc) override;
+  absl::Status Process(CalculatorContext *cc) override;
 
- private:
-  bool IsValidLabel(const std::string& label);
+private:
+  bool IsValidLabel(const std::string &label);
   bool IsValidScore(float score);
   // Stores numeric limits for filtering on the score.
   FilterDetectionCalculatorOptions options_;
@@ -134,7 +134,7 @@ class FilterDetectionCalculator : public CalculatorBase {
 };
 REGISTER_CALCULATOR(FilterDetectionCalculator);
 
-absl::Status FilterDetectionCalculator::GetContract(CalculatorContract* cc) {
+absl::Status FilterDetectionCalculator::GetContract(CalculatorContract *cc) {
   RET_CHECK(!cc->Inputs().GetTags().empty());
   RET_CHECK(!cc->Outputs().GetTags().empty());
 
@@ -155,7 +155,7 @@ absl::Status FilterDetectionCalculator::GetContract(CalculatorContract* cc) {
   return absl::OkStatus();
 }
 
-absl::Status FilterDetectionCalculator::Open(CalculatorContext* cc) {
+absl::Status FilterDetectionCalculator::Open(CalculatorContext *cc) {
   cc->SetOffset(TimestampDiff(0));
   options_ = cc->Options<FilterDetectionCalculatorOptions>();
   limit_labels_ = cc->InputSidePackets().HasTag(kLabelsTag) ||
@@ -166,7 +166,7 @@ absl::Status FilterDetectionCalculator::Open(CalculatorContext* cc) {
       whitelist_labels = absl::StrSplit(
           cc->InputSidePackets().Tag(kLabelsCsvTag).Get<std::string>(), ',',
           absl::SkipWhitespace());
-      for (auto& e : whitelist_labels) {
+      for (auto &e : whitelist_labels) {
         absl::StripAsciiWhitespace(&e);
       }
     } else {
@@ -189,7 +189,7 @@ absl::Status FilterDetectionCalculator::Open(CalculatorContext* cc) {
   return absl::OkStatus();
 }
 
-absl::Status FilterDetectionCalculator::Process(CalculatorContext* cc) {
+absl::Status FilterDetectionCalculator::Process(CalculatorContext *cc) {
   if (limit_labels_ && allowed_labels_.empty()) {
     return absl::OkStatus();
   }
@@ -200,10 +200,10 @@ absl::Status FilterDetectionCalculator::Process(CalculatorContext* cc) {
     detections.emplace_back(cc->Inputs().Tag(kDetectionsTag).Get<Detection>());
   }
   std::unique_ptr<Detections> outputs(new Detections);
-  for (const auto& input : detections) {
+  for (const auto &input : detections) {
     Detection output;
     for (int i = 0; i < input.label_size(); ++i) {
-      const std::string& label = input.label(i);
+      const std::string &label = input.label(i);
       const float score = input.score(i);
       if (IsValidLabel(label) && IsValidScore(score)) {
         output.add_label(label);
@@ -236,12 +236,12 @@ absl::Status FilterDetectionCalculator::Process(CalculatorContext* cc) {
   return absl::OkStatus();
 }
 
-bool FilterDetectionCalculator::IsValidLabel(const std::string& label) {
+bool FilterDetectionCalculator::IsValidLabel(const std::string &label) {
   bool match = !limit_labels_ || ContainsKey(allowed_labels_, label);
   if (!match) {
     // If no exact match is found, check for regular expression
     // comparions in the allowed_labels.
-    for (const auto& label_regexp : allowed_labels_) {
+    for (const auto &label_regexp : allowed_labels_) {
       match = match || RE2::FullMatch(label, RE2(label_regexp));
     }
   }
@@ -260,4 +260,4 @@ bool FilterDetectionCalculator::IsValidScore(float score) {
   return true;
 }
 
-}  // namespace mediapipe
+} // namespace mediapipe

@@ -63,6 +63,23 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "desktop_tracking_calculators",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//mediapipe/calculators/core:packet_resampler_calculator",
+        "//mediapipe/graphs/object_detection_3d/subgraphs:object_tracking_cpu",
+        "//mediapipe/graphs/object_detection_3d/subgraphs:renderer_tracking_cpu",
+        "//mediapipe/graphs/object_detection_3d/subgraphs:object_detection_cpu_new",
+        "//mediapipe/graphs/object_detection_3d/subgraphs:object_detection_3d_cpu",
+        # edits
+        "//mediapipe/calculators/util:detections_to_render_data_calculator",
+        "//mediapipe/calculators/video:opencv_video_decoder_calculator",
+        "//mediapipe/calculators/video:opencv_video_encoder_calculator",
+        "//mediapipe/calculators/core:packet_cloner_calculator",
+    ],
+)
+
 mediapipe_binary_graph(
     name = "mobile_gpu_binary_graph",
     graph = "object_occlusion_tracking.pbtxt",

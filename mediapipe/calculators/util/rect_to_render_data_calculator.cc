@@ -29,9 +29,10 @@ constexpr char kNormRectsTag[] = "NORM_RECTS";
 constexpr char kRectsTag[] = "RECTS";
 constexpr char kRenderDataTag[] = "RENDER_DATA";
 
-RenderAnnotation::Rectangle* NewRect(
-    const RectToRenderDataCalculatorOptions& options, RenderData* render_data) {
-  auto* annotation = render_data->add_render_annotations();
+RenderAnnotation::Rectangle *
+NewRect(const RectToRenderDataCalculatorOptions &options,
+        RenderData *render_data) {
+  auto *annotation = render_data->add_render_annotations();
   annotation->mutable_color()->set_r(options.color().r());
   annotation->mutable_color()->set_g(options.color().g());
   annotation->mutable_color()->set_b(options.color().b());
@@ -49,11 +50,13 @@ RenderAnnotation::Rectangle* NewRect(
 
 void SetRect(bool normalized, double xmin, double ymin, double width,
              double height, double rotation,
-             RenderAnnotation::Rectangle* rect) {
+             RenderAnnotation::Rectangle *rect) {
   if (rotation == 0.0) {
-    if (xmin + width < 0.0 || ymin + height < 0.0) return;
+    if (xmin + width < 0.0 || ymin + height < 0.0)
+      return;
     if (normalized) {
-      if (xmin > 1.0 || ymin > 1.0) return;
+      if (xmin > 1.0 || ymin > 1.0)
+        return;
     }
   }
   rect->set_normalized(normalized);
@@ -64,7 +67,7 @@ void SetRect(bool normalized, double xmin, double ymin, double width,
   rect->set_rotation(rotation);
 }
 
-}  // namespace
+} // namespace
 
 // Generates render data needed to render a rectangle in
 // AnnotationOverlayCalculator.
@@ -93,19 +96,19 @@ void SetRect(bool normalized, double xmin, double ymin, double width,
 //   }
 // }
 class RectToRenderDataCalculator : public CalculatorBase {
- public:
-  static absl::Status GetContract(CalculatorContract* cc);
+public:
+  static absl::Status GetContract(CalculatorContract *cc);
 
-  absl::Status Open(CalculatorContext* cc) override;
+  absl::Status Open(CalculatorContext *cc) override;
 
-  absl::Status Process(CalculatorContext* cc) override;
+  absl::Status Process(CalculatorContext *cc) override;
 
- private:
+private:
   RectToRenderDataCalculatorOptions options_;
 };
 REGISTER_CALCULATOR(RectToRenderDataCalculator);
 
-absl::Status RectToRenderDataCalculator::GetContract(CalculatorContract* cc) {
+absl::Status RectToRenderDataCalculator::GetContract(CalculatorContract *cc) {
   RET_CHECK_EQ((cc->Inputs().HasTag(kNormRectTag) ? 1 : 0) +
                    (cc->Inputs().HasTag(kRectTag) ? 1 : 0) +
                    (cc->Inputs().HasTag(kNormRectsTag) ? 1 : 0) +
@@ -132,7 +135,7 @@ absl::Status RectToRenderDataCalculator::GetContract(CalculatorContract* cc) {
   return absl::OkStatus();
 }
 
-absl::Status RectToRenderDataCalculator::Open(CalculatorContext* cc) {
+absl::Status RectToRenderDataCalculator::Open(CalculatorContext *cc) {
   cc->SetOffset(TimestampDiff(0));
 
   options_ = cc->Options<RectToRenderDataCalculatorOptions>();
@@ -140,30 +143,30 @@ absl::Status RectToRenderDataCalculator::Open(CalculatorContext* cc) {
   return absl::OkStatus();
 }
 
-absl::Status RectToRenderDataCalculator::Process(CalculatorContext* cc) {
+absl::Status RectToRenderDataCalculator::Process(CalculatorContext *cc) {
   auto render_data = absl::make_unique<RenderData>();
 
   if (cc->Inputs().HasTag(kNormRectTag) &&
       !cc->Inputs().Tag(kNormRectTag).IsEmpty()) {
-    const auto& rect = cc->Inputs().Tag(kNormRectTag).Get<NormalizedRect>();
-    auto* rectangle = NewRect(options_, render_data.get());
+    const auto &rect = cc->Inputs().Tag(kNormRectTag).Get<NormalizedRect>();
+    auto *rectangle = NewRect(options_, render_data.get());
     SetRect(/*normalized=*/true, rect.x_center() - rect.width() / 2.f,
             rect.y_center() - rect.height() / 2.f, rect.width(), rect.height(),
             rect.rotation(), rectangle);
   }
   if (cc->Inputs().HasTag(kRectTag) && !cc->Inputs().Tag(kRectTag).IsEmpty()) {
-    const auto& rect = cc->Inputs().Tag(kRectTag).Get<Rect>();
-    auto* rectangle = NewRect(options_, render_data.get());
+    const auto &rect = cc->Inputs().Tag(kRectTag).Get<Rect>();
+    auto *rectangle = NewRect(options_, render_data.get());
     SetRect(/*normalized=*/false, rect.x_center() - rect.width() / 2.f,
             rect.y_center() - rect.height() / 2.f, rect.width(), rect.height(),
             rect.rotation(), rectangle);
   }
   if (cc->Inputs().HasTag(kNormRectsTag) &&
       !cc->Inputs().Tag(kNormRectsTag).IsEmpty()) {
-    const auto& rects =
+    const auto &rects =
         cc->Inputs().Tag(kNormRectsTag).Get<std::vector<NormalizedRect>>();
-    for (auto& rect : rects) {
-      auto* rectangle = NewRect(options_, render_data.get());
+    for (auto &rect : rects) {
+      auto *rectangle = NewRect(options_, render_data.get());
       SetRect(/*normalized=*/true, rect.x_center() - rect.width() / 2.f,
               rect.y_center() - rect.height() / 2.f, rect.width(),
               rect.height(), rect.rotation(), rectangle);
@@ -171,9 +174,9 @@ absl::Status RectToRenderDataCalculator::Process(CalculatorContext* cc) {
   }
   if (cc->Inputs().HasTag(kRectsTag) &&
       !cc->Inputs().Tag(kRectsTag).IsEmpty()) {
-    const auto& rects = cc->Inputs().Tag(kRectsTag).Get<std::vector<Rect>>();
-    for (auto& rect : rects) {
-      auto* rectangle = NewRect(options_, render_data.get());
+    const auto &rects = cc->Inputs().Tag(kRectsTag).Get<std::vector<Rect>>();
+    for (auto &rect : rects) {
+      auto *rectangle = NewRect(options_, render_data.get());
       SetRect(/*normalized=*/false, rect.x_center() - rect.width() / 2.f,
               rect.y_center() - rect.height() / 2.f, rect.width(),
               rect.height(), rect.rotation(), rectangle);
@@ -187,4 +190,4 @@ absl::Status RectToRenderDataCalculator::Process(CalculatorContext* cc) {
   return absl::OkStatus();
 }
 
-}  // namespace mediapipe
+} // namespace mediapipe

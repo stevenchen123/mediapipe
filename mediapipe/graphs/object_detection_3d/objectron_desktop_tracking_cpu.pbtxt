@@ -1,0 +1,78 @@
+# MediaPipe Objectron 3D object detection on Desktop CPU.
+input_side_packet: "INPUT_FILE_PATH:input_video_path"
+input_side_packet: "FILE_PATH:0:box_landmark_model_path"
+input_side_packet: "LABELS_CSV:allowed_labels"
+input_side_packet: "OUTPUT_FILE_PATH:output_video_path"
+
+
+# Decodes an input video file into images and a video header.
+node {
+  calculator: "OpenCvVideoDecoderCalculator"
+  input_side_packet: "INPUT_FILE_PATH:input_video_path"
+  output_stream: "VIDEO:input_video"
+  output_stream: "VIDEO_PRESTREAM:input_video_header"
+}
+
+
+# max_queue_size limits the number of packets enqueued on any input stream
+# by throttling inputs to the graph. This makes the graph only process one
+# frame per time.
+max_queue_size: 1
+
+
+# Subgraph that detects objects (see object_detection_cpu_new.pbtxt).
+node {
+  calculator: "ObjectDetectionSubgraphCpuNew"
+  # input_stream: "IMAGE:throttled_input_video"
+  input_stream: "IMAGE:input_video"
+  output_stream: "DETECTIONS:fbf_detections"
+  input_side_packet: "LABELS_CSV:allowed_labels"
+}
+
+# Subgraph that predicts 3D oriented bbox (see object_detection_3d_cpu.pbtxt).
+node {
+  calculator: "ObjectDetection3dCpuSubgraph"
+  # Input/Output streams and input side packets.
+  input_stream: "IMAGE:input_video"
+  input_stream: "DETECTION:tracked_detections"
+  # Path to TfLite model for 3D bounding box landmark prediction
+  input_side_packet: "MODEL_PATH:box_landmark_model_path"
+  output_stream: "LIFTED_FRAME_ANNOTATION:detections_3d"
+  output_stream: "MULTI_LANDMARKS:multi_box_landmarks"
+}
+
+
+
+# Subgraph that tracks objects (see object_tracking_cpu.pbtxt).
+node {
+  calculator: "ObjectTrackingSubgraphCpu"
+  input_stream: "VIDEO:input_video"
+  input_stream: "DETECTIONS:fbf_detections"
+  output_stream: "DETECTIONS:tracked_detections"
+}
+
+
+node {
+  calculator: "RendererTrackingSubgraphCpu"
+  input_stream: "IMAGE:input_video"
+  input_stream: "MULTI_LANDMARKS:multi_box_landmarks"
+  input_stream: "DETECTIONS:0:fbf_detections"
+  input_stream: "DETECTIONS:1:tracked_detections"
+  output_stream: "IMAGE:output_video"
+}
+
+
+# Encodes the annotated images into a video file, adopting properties specified
+# in the input video header, e.g., video framerate.
+node {
+  calculator: "OpenCvVideoEncoderCalculator"
+  input_stream: "VIDEO:output_video"
+  input_stream: "VIDEO_PRESTREAM:input_video_header"
+  input_side_packet: "OUTPUT_FILE_PATH:output_video_path"
+  node_options: {
+    [type.googleapis.com/mediapipe.OpenCvVideoEncoderCalculatorOptions]: {
+      codec: "avc1"
+      video_format: "mp4"
+    }
+  }
+}
