@@ -70,6 +70,11 @@ using Strings = std::vector<std::string>;
 //   }
 // }
 
+std::string toLowerCase(std::string s) {
+  for_each(s.begin(), s.end(), [](char &c) { c = tolower(c); });
+  return s;
+}
+
 struct FirstGreaterComparator {
   bool operator()(const std::pair<float, int> &a,
                   const std::pair<float, int> &b) const {
@@ -172,6 +177,8 @@ absl::Status FilterDetectionCalculator::Open(CalculatorContext *cc) {
     } else {
       whitelist_labels = cc->InputSidePackets().Tag(kLabelsTag).Get<Strings>();
     }
+    for_each(whitelist_labels.begin(), whitelist_labels.end(),
+             [](std::string &s) { s = toLowerCase(s); });
     allowed_labels_.insert(whitelist_labels.begin(), whitelist_labels.end());
   }
   if (limit_labels_ && allowed_labels_.empty()) {
@@ -202,12 +209,16 @@ absl::Status FilterDetectionCalculator::Process(CalculatorContext *cc) {
   std::unique_ptr<Detections> outputs(new Detections);
   for (const auto &input : detections) {
     Detection output;
+    // std::cout << "~~~ in filter_detection_calculator, input.detection_id() "
+    //           << input.detection_id() << std::endl;
     for (int i = 0; i < input.label_size(); ++i) {
-      const std::string &label = input.label(i);
+      // const std::string &label = input.label(i);
+      const std::string &label = toLowerCase(input.label(i));
       const float score = input.score(i);
       if (IsValidLabel(label) && IsValidScore(score)) {
         output.add_label(label);
         output.add_score(score);
+        output.set_detection_id(input.detection_id());
       }
     }
     if (output.label_size() > 0) {

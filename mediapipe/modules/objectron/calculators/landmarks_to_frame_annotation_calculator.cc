@@ -26,23 +26,23 @@ constexpr char kInputLandmarksTag[] = "LANDMARKS";
 constexpr char kInputMultiLandmarksTag[] = "MULTI_LANDMARKS";
 constexpr char kOutputFrameAnnotationTag[] = "FRAME_ANNOTATION";
 
-}  // namespace
+} // namespace
 
 // A calculator that converts NormalizedLandmarkList to FrameAnnotation proto.
 class LandmarksToFrameAnnotationCalculator : public CalculatorBase {
- public:
-  static absl::Status GetContract(CalculatorContract* cc);
-  absl::Status Open(CalculatorContext* cc) override;
-  absl::Status Process(CalculatorContext* cc) override;
+public:
+  static absl::Status GetContract(CalculatorContract *cc);
+  absl::Status Open(CalculatorContext *cc) override;
+  absl::Status Process(CalculatorContext *cc) override;
 
- private:
-  void AddLandmarksToFrameAnnotation(const NormalizedLandmarkList& landmarks,
-                                     FrameAnnotation* frame_annotation);
+private:
+  void AddLandmarksToFrameAnnotation(const NormalizedLandmarkList &landmarks,
+                                     FrameAnnotation *frame_annotation);
 };
 REGISTER_CALCULATOR(LandmarksToFrameAnnotationCalculator);
 
-absl::Status LandmarksToFrameAnnotationCalculator::GetContract(
-    CalculatorContract* cc) {
+absl::Status
+LandmarksToFrameAnnotationCalculator::GetContract(CalculatorContract *cc) {
   RET_CHECK(!cc->Inputs().GetTags().empty());
   RET_CHECK(!cc->Outputs().GetTags().empty());
 
@@ -60,19 +60,20 @@ absl::Status LandmarksToFrameAnnotationCalculator::GetContract(
   return absl::OkStatus();
 }
 
-absl::Status LandmarksToFrameAnnotationCalculator::Open(CalculatorContext* cc) {
+absl::Status LandmarksToFrameAnnotationCalculator::Open(CalculatorContext *cc) {
   cc->SetOffset(TimestampDiff(0));
   return absl::OkStatus();
 }
 
-absl::Status LandmarksToFrameAnnotationCalculator::Process(
-    CalculatorContext* cc) {
+absl::Status
+LandmarksToFrameAnnotationCalculator::Process(CalculatorContext *cc) {
+  std::cout << "from landmarks_to_frame_annotation_calculator" << std::endl;
   auto frame_annotation = absl::make_unique<FrameAnnotation>();
 
   // Handle the case when input has only one NormalizedLandmarkList.
   if (cc->Inputs().HasTag(kInputLandmarksTag) &&
       !cc->Inputs().Tag(kInputLandmarksTag).IsEmpty()) {
-    const auto& landmarks =
+    const auto &landmarks =
         cc->Inputs().Tag(kInputMultiLandmarksTag).Get<NormalizedLandmarkList>();
     AddLandmarksToFrameAnnotation(landmarks, frame_annotation.get());
   }
@@ -80,14 +81,19 @@ absl::Status LandmarksToFrameAnnotationCalculator::Process(
   // Handle the case when input has muliple NormalizedLandmarkList.
   if (cc->Inputs().HasTag(kInputMultiLandmarksTag) &&
       !cc->Inputs().Tag(kInputMultiLandmarksTag).IsEmpty()) {
-    const auto& landmarks_list =
+    const auto &landmarks_list =
         cc->Inputs()
             .Tag(kInputMultiLandmarksTag)
             .Get<std::vector<NormalizedLandmarkList>>();
-    for (const auto& landmarks : landmarks_list) {
+    std::cout << "   landmarkList.size() " << landmarks_list.size()
+              << std::endl;
+
+    for (const auto &landmarks : landmarks_list) {
       AddLandmarksToFrameAnnotation(landmarks, frame_annotation.get());
     }
   }
+  std::cout << "    frame_annotation->annotations_size()"
+            << frame_annotation->annotations_size() << std::endl;
 
   // Output
   if (cc->Outputs().HasTag(kOutputFrameAnnotationTag)) {
@@ -99,14 +105,15 @@ absl::Status LandmarksToFrameAnnotationCalculator::Process(
 }
 
 void LandmarksToFrameAnnotationCalculator::AddLandmarksToFrameAnnotation(
-    const NormalizedLandmarkList& landmarks,
-    FrameAnnotation* frame_annotation) {
-  auto* new_annotation = frame_annotation->add_annotations();
-  for (const auto& landmark : landmarks.landmark()) {
-    auto* point2d = new_annotation->add_keypoints()->mutable_point_2d();
+    const NormalizedLandmarkList &landmarks,
+    FrameAnnotation *frame_annotation) {
+  auto *new_annotation = frame_annotation->add_annotations();
+  new_annotation->set_object_id(landmarks.landmark_list_id());
+  for (const auto &landmark : landmarks.landmark()) {
+    auto *point2d = new_annotation->add_keypoints()->mutable_point_2d();
     point2d->set_x(landmark.x());
     point2d->set_y(landmark.y());
   }
 }
 
-}  // namespace mediapipe
+} // namespace mediapipe

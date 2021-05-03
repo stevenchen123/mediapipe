@@ -29,10 +29,11 @@ namespace mediapipe {
 // if we want to develop decoder for generic skeleton, then we need to
 // generalize this class, and make a few child classes.
 class Decoder {
- public:
+public:
   static const int kNumOffsetmaps;
 
-  explicit Decoder(const BeliefDecoderConfig& config) : config_(config) {
+  explicit Decoder(const BeliefDecoderConfig &config) : config_(config) {
+    // no clang-format
     epnp_alpha_ << 4.0f, -1.0f, -1.0f, -1.0f, 2.0f, -1.0f, -1.0f, 1.0f, 2.0f,
         -1.0f, 1.0f, -1.0f, 0.0f, -1.0f, 1.0f, 1.0f, 2.0f, 1.0f, -1.0f, -1.0f,
         0.0f, 1.0f, -1.0f, 1.0f, 0.0f, 1.0f, 1.0f, -1.0f, -2.0f, 1.0f, 1.0f,
@@ -47,8 +48,8 @@ class Decoder {
   // Output:
   //   Outputs 3D bounding boxes 2D vertices, represented by 'point_2d' field
   //   in each 'keypoints' field of object annotations.
-  FrameAnnotation DecodeBoundingBoxKeypoints(const cv::Mat& heatmap,
-                                             const cv::Mat& offsetmap) const;
+  FrameAnnotation DecodeBoundingBoxKeypoints(const cv::Mat &heatmap,
+                                             const cv::Mat &offsetmap) const;
 
   // Lifts the estimated 2D projections of bounding box vertices to 3D.
   // This function uses the EPnP approach described in this paper:
@@ -67,34 +68,34 @@ class Decoder {
   //   estimated_box: annotation with point_3d field populated with
   //     3d vertices.
   absl::Status Lift2DTo3D(
-      const Eigen::Matrix<float, 4, 4, Eigen::RowMajor>& projection_matrix,
-      bool portrait, FrameAnnotation* estimated_box) const;
+      const Eigen::Matrix<float, 4, 4, Eigen::RowMajor> &projection_matrix,
+      bool portrait, FrameAnnotation *estimated_box) const;
 
- private:
+private:
   struct BeliefBox {
     float belief;
     std::vector<std::pair<float, float>> box_2d;
   };
 
-  std::vector<cv::Point> ExtractCenterKeypoints(
-      const cv::Mat& center_heatmap) const;
+  std::vector<cv::Point>
+  ExtractCenterKeypoints(const cv::Mat &center_heatmap) const;
 
   // Decodes 2D keypoints at the peak point.
-  void DecodeByPeak(const cv::Mat& offsetmap, int center_x, int center_y,
+  void DecodeByPeak(const cv::Mat &offsetmap, int center_x, int center_y,
                     float offset_scale_x, float offset_scale_y,
-                    BeliefBox* box) const;
+                    BeliefBox *box) const;
 
   // Decodes 2D keypoints by voting around the peak.
-  void DecodeByVoting(const cv::Mat& heatmap, const cv::Mat& offsetmap,
+  void DecodeByVoting(const cv::Mat &heatmap, const cv::Mat &offsetmap,
                       int center_x, int center_y, float offset_scale_x,
-                      float offset_scale_y, BeliefBox* box) const;
+                      float offset_scale_y, BeliefBox *box) const;
 
   // Returns true if it is a new box. Otherwise, it may replace an existing box
   // if the new box's belief is higher.
-  bool IsNewBox(std::vector<BeliefBox>* boxes, BeliefBox* box) const;
+  bool IsNewBox(std::vector<BeliefBox> *boxes, BeliefBox *box) const;
 
   // Returns true if the two boxes are identical.
-  bool IsIdentical(const BeliefBox& box_1, const BeliefBox& box_2) const;
+  bool IsIdentical(const BeliefBox &box_1, const BeliefBox &box_2) const;
 
   BeliefDecoderConfig config_;
   // Following equation (1) in this paper
@@ -104,6 +105,6 @@ class Decoder {
   Eigen::Matrix<float, 8, 4, Eigen::RowMajor> epnp_alpha_;
 };
 
-}  // namespace mediapipe
+} // namespace mediapipe
 
-#endif  // MEDIAPIPE_MODULES_OBJECTRON_CALCULATORS_DECODER_H_
+#endif // MEDIAPIPE_MODULES_OBJECTRON_CALCULATORS_DECODER_H_

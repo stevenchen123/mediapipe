@@ -39,6 +39,16 @@ node: {
   input_stream: "TRACKING_BOXES:boxes"
   output_stream: "DETECTIONS:tracked_detections"
   output_stream: "CANCEL_OBJECT_ID:cancel_object_id"
+  
+  node_options:{
+    [type.googleapis.com/mediapipe.TrackedDetectionManagerCalculatorOptions]{
+      time_to_persist_since_last_detection: 5000
+      # 1second at 30 fps, e.g, iphone
+      time_to_show_since_last_detection: 1000  
+      # 1second at 10 fps, e.g., aria
+      # time_to_show_since_last_detection: 300 
+    }
+  }
 
   input_stream_handler {
     input_stream_handler: "SyncSetInputStreamHandler"

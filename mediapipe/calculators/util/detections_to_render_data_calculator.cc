@@ -40,6 +40,7 @@ constexpr char kKeypointLabel[] = "KEYPOINT";
 // The ratio of detection label font height to the height of detection bounding
 // box.
 constexpr double kLabelToBoundingBoxRatio = 0.1;
+constexpr double kTextHeight = 0.02;
 // Perserve 2 decimal digits.
 constexpr float kNumScoreDecimalDigitsMultipler = 100;
 
@@ -379,12 +380,13 @@ void DetectionsToRenderDataCalculator::AddDetectionToRenderData(
   } else {
     // Determine the text line height based on the default label to bounding box
     // ratio and the number of labels.
-    text_line_height =
-        detection.location_data().relative_bounding_box().height() *
-        std::min(kLabelToBoundingBoxRatio,
-                 1 / (double)(std::max(detection.label_size(),
-                                       detection.label_id_size()) +
-                              1 /* for feature_tag */));
+    // text_line_height =
+    //     detection.location_data().relative_bounding_box().height() *
+    //     std::min(kLabelToBoundingBoxRatio,
+    //              1 / (double)(std::max(detection.label_size(),
+    //                                    detection.label_id_size()) +
+    //                           1 /* for feature_tag */));
+    text_line_height = kTextHeight;
   }
   AddLabels(detection, options, text_line_height, render_data);
   AddFeatureTag(detection, options, text_line_height, render_data);

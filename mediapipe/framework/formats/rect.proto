@@ -34,7 +34,7 @@ message Rect {
   optional float rotation = 5 [default = 0.0];
 
   // Optional unique id to help associate different Rects to each other.
-  optional int64 rect_id = 6;
+  optional int64 rect_id = 6 [default = -1];
 }
 
 // A rectangle with rotation in normalized coordinates. The values of box center
@@ -54,5 +54,5 @@ message NormalizedRect {
 
   // Optional unique id to help associate different NormalizedRects to each
   // other.
-  optional int64 rect_id = 6;
+  optional int64 rect_id = 6 [default = -1];
 }

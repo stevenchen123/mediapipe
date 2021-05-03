@@ -26,11 +26,11 @@ struct NormalizedRectBounds {
 };
 
 // Computes the area of a NormalizedRect.
-float BoxArea(const NormalizedRect& box) { return box.width() * box.height(); }
+float BoxArea(const NormalizedRect &box) { return box.width() * box.height(); }
 
 // Computes the bounds of a NormalizedRect.
-void GetNormalizedRectBounds(const NormalizedRect& box,
-                             NormalizedRectBounds* bounds) {
+void GetNormalizedRectBounds(const NormalizedRect &box,
+                             NormalizedRectBounds *bounds) {
   bounds->left = box.x_center() - box.width() / 2.f;
   bounds->right = box.x_center() + box.width() / 2.f;
   bounds->top = box.y_center() - box.height() / 2.f;
@@ -38,7 +38,7 @@ void GetNormalizedRectBounds(const NormalizedRect& box,
 }
 
 // Computes the overlapping area of two boxes, ignoring rotation.
-float OverlapArea(const NormalizedRect& box1, const NormalizedRect& box2) {
+float OverlapArea(const NormalizedRect &box1, const NormalizedRect &box2) {
   NormalizedRectBounds bounds1, bounds2;
   GetNormalizedRectBounds(box1, &bounds1);
   GetNormalizedRectBounds(box2, &bounds2);
@@ -51,8 +51,8 @@ float OverlapArea(const NormalizedRect& box1, const NormalizedRect& box2) {
   return x_overlap * y_overlap;
 }
 
-std::array<Vector2_f, 4> ComputeCorners(const NormalizedRect& normalized_box,
-                                        const Vector2_f& center,
+std::array<Vector2_f, 4> ComputeCorners(const NormalizedRect &normalized_box,
+                                        const Vector2_f &center,
                                         int image_width, int image_height) {
   NormalizedRectBounds bounds;
   GetNormalizedRectBounds(normalized_box, &bounds);
@@ -79,9 +79,9 @@ std::array<Vector2_f, 4> ComputeCorners(const NormalizedRect& normalized_box,
   return corners;
 }
 
-}  // namespace
+} // namespace
 
-void TrackedDetection::AddLabel(const std::string& label, float score) {
+void TrackedDetection::AddLabel(const std::string &label, float score) {
   auto label_ptr = label_to_score_map_.find(label);
   if (label_ptr == label_to_score_map_.end()) {
     label_to_score_map_[label] = score;
@@ -90,7 +90,7 @@ void TrackedDetection::AddLabel(const std::string& label, float score) {
   }
 }
 
-bool TrackedDetection::IsSameAs(const TrackedDetection& other,
+bool TrackedDetection::IsSameAs(const TrackedDetection &other,
                                 float max_area_ratio,
                                 float min_overlap_ratio) const {
   const auto box0 = bounding_box_;
@@ -98,6 +98,17 @@ bool TrackedDetection::IsSameAs(const TrackedDetection& other,
   const double box0_area = BoxArea(box0);
   const double box1_area = BoxArea(box1);
   const double overlap_area = OverlapArea(box0, box1);
+
+  // return false if no overlap in semantic category (label)
+  bool ifOverlap = false;
+  for (auto [k, v] : other.label_to_score_map()) {
+    if (label_to_score_map_.find(k) != label_to_score_map_.end()) {
+      ifOverlap = true;
+      break;
+    }
+  }
+  if (!ifOverlap)
+    return false;
 
   // For cases where a small object is in front of a big object.
   // TODO: This is hard threshold. Make the threshold smaller
@@ -118,8 +129,8 @@ bool TrackedDetection::IsSameAs(const TrackedDetection& other,
   return false;
 }
 
-void TrackedDetection::MergeLabelScore(const TrackedDetection& other) {
-  for (const auto& label_score : other.label_to_score_map()) {
+void TrackedDetection::MergeLabelScore(const TrackedDetection &other) {
+  for (const auto &label_score : other.label_to_score_map()) {
     const auto label_score_ptr = label_to_score_map_.find(label_score.first);
     if (label_score_ptr == label_to_score_map_.end()) {
       AddLabel(label_score.first, label_score.second);
@@ -131,8 +142,8 @@ void TrackedDetection::MergeLabelScore(const TrackedDetection& other) {
   }
 }
 
-std::array<Vector2_f, 4> TrackedDetection::GetCorners(
-    float image_width, float image_height) const {
+std::array<Vector2_f, 4>
+TrackedDetection::GetCorners(float image_width, float image_height) const {
   NormalizedRectBounds bounds;
   GetNormalizedRectBounds(bounding_box_, &bounds);
   Vector2_f center((bounds.right + bounds.left) / 2.0f * image_width,
@@ -141,4 +152,4 @@ std::array<Vector2_f, 4> TrackedDetection::GetCorners(
   return ComputeCorners(bounding_box_, center, image_width, image_height);
 }
 
-}  // namespace mediapipe
+} // namespace mediapipe

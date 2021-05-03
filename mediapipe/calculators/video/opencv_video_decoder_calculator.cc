@@ -32,22 +32,22 @@ namespace {
 ImageFormat::Format GetImageFormat(int num_channels) {
   ImageFormat::Format format;
   switch (num_channels) {
-    case 1:
-      format = ImageFormat::GRAY8;
-      break;
-    case 3:
-      format = ImageFormat::SRGB;
-      break;
-    case 4:
-      format = ImageFormat::SRGBA;
-      break;
-    default:
-      format = ImageFormat::UNKNOWN;
-      break;
+  case 1:
+    format = ImageFormat::GRAY8;
+    break;
+  case 3:
+    format = ImageFormat::SRGB;
+    break;
+  case 4:
+    format = ImageFormat::SRGBA;
+    break;
+  default:
+    format = ImageFormat::UNKNOWN;
+    break;
   }
   return format;
 }
-}  // namespace
+} // namespace
 
 // This Calculator takes no input streams and produces video packets.
 // All streams and input side packets are specified using tags and all of them
@@ -85,8 +85,8 @@ ImageFormat::Format GetImageFormat(int num_channels) {
 // }
 //
 class OpenCvVideoDecoderCalculator : public CalculatorBase {
- public:
-  static absl::Status GetContract(CalculatorContract* cc) {
+public:
+  static absl::Status GetContract(CalculatorContract *cc) {
     cc->InputSidePackets().Tag("INPUT_FILE_PATH").Set<std::string>();
     cc->Outputs().Tag("VIDEO").Set<ImageFrame>();
     if (cc->Outputs().HasTag("VIDEO_PRESTREAM")) {
@@ -98,8 +98,8 @@ class OpenCvVideoDecoderCalculator : public CalculatorBase {
     return absl::OkStatus();
   }
 
-  absl::Status Open(CalculatorContext* cc) override {
-    const std::string& input_file_path =
+  absl::Status Open(CalculatorContext *cc) override {
+    const std::string &input_file_path =
         cc->InputSidePackets().Tag("INPUT_FILE_PATH").Get<std::string>();
     cap_ = absl::make_unique<cv::VideoCapture>(input_file_path);
     if (!cap_->isOpened()) {
@@ -148,6 +148,7 @@ class OpenCvVideoDecoderCalculator : public CalculatorBase {
     }
     // Rewind to the very first frame.
     cap_->set(cv::CAP_PROP_POS_AVI_RATIO, 0);
+    // cap_->set(cv::CAP_PROP_POS_FRAMES, 0);
 
     if (cc->OutputSidePackets().HasTag("SAVED_AUDIO_PATH")) {
 #ifdef HAVE_FFMPEG
@@ -180,20 +181,27 @@ class OpenCvVideoDecoderCalculator : public CalculatorBase {
     return absl::OkStatus();
   }
 
-  absl::Status Process(CalculatorContext* cc) override {
+  absl::Status Process(CalculatorContext *cc) override {
     auto image_frame = absl::make_unique<ImageFrame>(format_, width_, height_,
                                                      /*alignment_boundary=*/1);
     // Use microsecond as the unit of time.
     Timestamp timestamp(cap_->get(cv::CAP_PROP_POS_MSEC) * 1000);
+    // known issue with opencv cap_->get(cv::CAP_PROP_POS_MSEC)
+    // it often returns the same or negative value on the second frame
+    if (decoded_frames_ == 1 && timestamp <= prev_timestamp_) {
+      timestamp = prev_timestamp_ + 500;
+    }
     if (format_ == ImageFormat::GRAY8) {
       cv::Mat frame = formats::MatView(image_frame.get());
       cap_->read(frame);
+      decoded_frames_++;
       if (frame.empty()) {
         return tool::StatusStop();
       }
     } else {
       cv::Mat tmp_frame;
       cap_->read(tmp_frame);
+      decoded_frames_++;
       if (tmp_frame.empty()) {
         return tool::StatusStop();
       }
@@ -210,13 +218,11 @@ class OpenCvVideoDecoderCalculator : public CalculatorBase {
     if (prev_timestamp_ < timestamp) {
       cc->Outputs().Tag("VIDEO").Add(image_frame.release(), timestamp);
       prev_timestamp_ = timestamp;
-      decoded_frames_++;
     }
-
     return absl::OkStatus();
   }
 
-  absl::Status Close(CalculatorContext* cc) override {
+  absl::Status Close(CalculatorContext *cc) override {
     if (cap_ && cap_->isOpened()) {
       cap_->release();
     }
@@ -228,7 +234,7 @@ class OpenCvVideoDecoderCalculator : public CalculatorBase {
     return absl::OkStatus();
   }
 
- private:
+private:
   std::unique_ptr<cv::VideoCapture> cap_;
   int width_;
   int height_;
@@ -239,4 +245,4 @@ class OpenCvVideoDecoderCalculator : public CalculatorBase {
 };
 
 REGISTER_CALCULATOR(OpenCvVideoDecoderCalculator);
-}  // namespace mediapipe
+} // namespace mediapipe

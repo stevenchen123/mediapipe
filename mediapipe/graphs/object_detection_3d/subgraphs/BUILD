@@ -76,6 +76,17 @@ mediapipe_simple_subgraph(
 )
 
 mediapipe_simple_subgraph(
+    name = "object_detection_from_json",
+    graph = "object_detection_from_json.pbtxt",
+    register_as = "ObjectDetectionFromJsonSubgraph",
+    deps = [
+        "//mediapipe/calculators/util:detections_from_json_calculator",
+        "//mediapipe/calculators/util:non_max_suppression_calculator",
+        "//mediapipe/modules/objectron/calculators:filter_detection_calculator",
+    ],
+)
+
+mediapipe_simple_subgraph(
     name = "object_tracking_cpu",
     graph = "object_tracking_cpu.pbtxt",
     register_as = "ObjectTrackingSubgraphCpu",
@@ -110,5 +121,6 @@ mediapipe_simple_subgraph(
         "//mediapipe/modules/objectron/calculators:frame_annotation_to_rect_calculator",
         "//mediapipe/modules/objectron/calculators:landmarks_to_frame_annotation_calculator",
         "//mediapipe/modules/objectron/calculators:lift_2d_frame_annotation_to_3d_calculator",
+        "//mediapipe/modules/objectron/calculators:association_detection_annotation_by_order_calculator",
     ],
 )

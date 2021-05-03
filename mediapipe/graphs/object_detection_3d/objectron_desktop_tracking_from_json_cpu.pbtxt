@@ -1,9 +1,15 @@
+# max_queue_size limits the number of packets enqueued on any input stream
+# by throttling inputs to the graph. This makes the graph only process one
+# frame per time.
+max_queue_size: 1
+
 # MediaPipe Objectron 3D object detection on Desktop CPU.
 input_side_packet: "INPUT_FILE_PATH:input_video_path"
 input_side_packet: "FILE_PATH:0:box_landmark_model_path"
 input_side_packet: "LABELS_CSV:allowed_labels"
 input_side_packet: "OUTPUT_FILE_PATH:output_video_path"
-
+input_side_packet: "FILENAME:0:json_filename"
+input_side_packet: "FILENAME:1:out_json_filename"
 
 # Decodes an input video file into images and a video header.
 node {
@@ -14,32 +20,16 @@ node {
 }
 
 
-# max_queue_size limits the number of packets enqueued on any input stream
-# by throttling inputs to the graph. This makes the graph only process one
-# frame per time.
-max_queue_size: 1
-
-
-# Subgraph that detects objects (see object_detection_cpu_new.pbtxt).
-node {
-  calculator: "ObjectDetectionSubgraphCpuNew"
+# Subgraph that loads bbox detection from a json file (see object_detection_from_json.pbtxt)
+node{
+  calculator: "ObjectDetectionFromJsonSubgraph"
   # input_stream: "IMAGE:throttled_input_video"
   input_stream: "IMAGE:input_video"
+  input_side_packet: "FILENAME:json_filename"
   output_stream: "DETECTIONS:fbf_detections"
-  input_side_packet: "LABELS_CSV:allowed_labels"
 }
 
-# Subgraph that predicts 3D oriented bbox (see object_detection_3d_cpu.pbtxt).
-node {
-  calculator: "ObjectDetection3dCpuSubgraph"
-  # Input/Output streams and input side packets.
-  input_stream: "IMAGE:input_video"
-  input_stream: "DETECTION:tracked_detections"
-  # Path to TfLite model for 3D bounding box landmark prediction
-  input_side_packet: "MODEL_PATH:box_landmark_model_path"
-  output_stream: "LIFTED_FRAME_ANNOTATION:detections_3d"
-  output_stream: "MULTI_LANDMARKS:multi_box_landmarks"
-}
+
 
 # Subgraph that tracks objects (see object_tracking_cpu.pbtxt).
 node {
@@ -49,6 +39,43 @@ node {
   output_stream: "DETECTIONS:tracked_detections"
 }
 
+
+# Filters the detections to only those with valid scores
+# for the specified allowed labels.
+node {
+  calculator: "FilterDetectionCalculator"
+  input_stream: "DETECTIONS:tracked_detections"
+  output_stream: "DETECTIONS:cat_filtered_tracked_detections"
+  input_side_packet: "LABELS_CSV:allowed_labels"
+}
+
+# filter detections that are too close to the border
+node {
+  calculator: "FilterDetectionByRegionCalculator"
+  input_stream: "DETECTIONS:cat_filtered_tracked_detections"
+  output_stream: "DETECTIONS:cat_filtered_tracked_centered_detections"
+  options: {
+    [mediapipe.FilterDetectionByRegionCalculatorOptions.ext]: {
+      reject_border_width: 0.05
+    }
+  }
+}
+
+# Subgraph that predicts 3D oriented bbox (see object_detection_3d_cpu.pbtxt).
+node {
+  calculator: "ObjectDetection3dCpuSubgraph"
+  # Input/Output streams and input side packets.
+  input_stream: "IMAGE:input_video"
+  # input_stream: "DETECTION:cat_filtered_tracked_detections"
+  input_stream: "DETECTION:cat_filtered_tracked_centered_detections"
+  # Path to TfLite model for 3D bounding box landmark prediction
+  input_side_packet: "MODEL_PATH:box_landmark_model_path"
+  output_stream: "LIFTED_FRAME_ANNOTATION:detections_3d"
+  output_stream: "MULTI_LANDMARKS:multi_box_landmarks"
+}
+
+
+# Display detected objects
 node {
   calculator: "RendererTrackingSubgraphCpu"
   input_stream: "IMAGE:input_video"
@@ -58,6 +85,16 @@ node {
   output_stream: "IMAGE:output_video"
 }
 
+
+# Write detected objects to a json file
+node {
+  calculator: "WriteToJsonFileCalculator"
+  input_stream: "IMAGE:input_video"
+  input_stream: "TRACKEDDETECTIONS:tracked_detections"
+  input_stream: "FBFDETECTIONS:fbf_detections"
+  input_stream: "ANNOTATIONS:detections_3d"
+  input_side_packet: "FILENAME:out_json_filename"
+}
 
 # Encodes the annotated images into a video file, adopting properties specified
 # in the input video header, e.g., video framerate.

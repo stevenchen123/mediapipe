@@ -40,8 +40,8 @@ constexpr char kNormRectsTag[] = "NORM_RECTS";
 constexpr float kMinFloat = std::numeric_limits<float>::lowest();
 constexpr float kMaxFloat = std::numeric_limits<float>::max();
 
-absl::Status NormRectFromKeyPoints(const LocationData& location_data,
-                                   NormalizedRect* rect) {
+absl::Status NormRectFromKeyPoints(const LocationData &location_data,
+                                   NormalizedRect *rect) {
   RET_CHECK_GT(location_data.relative_keypoints_size(), 1)
       << "2 or more key points required to calculate a rect.";
   float xmin = kMaxFloat;
@@ -49,7 +49,7 @@ absl::Status NormRectFromKeyPoints(const LocationData& location_data,
   float xmax = kMinFloat;
   float ymax = kMinFloat;
   for (int i = 0; i < location_data.relative_keypoints_size(); ++i) {
-    const auto& kp = location_data.relative_keypoints(i);
+    const auto &kp = location_data.relative_keypoints(i);
     xmin = std::min(xmin, kp.x());
     ymin = std::min(ymin, kp.y());
     xmax = std::max(xmax, kp.x());
@@ -62,72 +62,73 @@ absl::Status NormRectFromKeyPoints(const LocationData& location_data,
   return absl::OkStatus();
 }
 
-template <class B, class R>
-void RectFromBox(B box, R* rect) {
+template <class B, class R> void RectFromBox(B box, R *rect) {
   rect->set_x_center(box.xmin() + box.width() / 2);
   rect->set_y_center(box.ymin() + box.height() / 2);
   rect->set_width(box.width());
   rect->set_height(box.height());
 }
 
-}  // namespace
+} // namespace
 
 absl::Status DetectionsToRectsCalculator::DetectionToRect(
-    const Detection& detection, const DetectionSpec& detection_spec,
-    Rect* rect) {
+    const Detection &detection, const DetectionSpec &detection_spec,
+    Rect *rect) {
   const LocationData location_data = detection.location_data();
   switch (options_.conversion_mode()) {
-    case mediapipe::DetectionsToRectsCalculatorOptions_ConversionMode_DEFAULT:
-    case mediapipe::
-        DetectionsToRectsCalculatorOptions_ConversionMode_USE_BOUNDING_BOX: {
-      RET_CHECK(location_data.format() == LocationData::BOUNDING_BOX)
-          << "Only Detection with formats of BOUNDING_BOX can be converted to "
-             "Rect";
-      RectFromBox(location_data.bounding_box(), rect);
-      break;
-    }
-    case mediapipe::
-        DetectionsToRectsCalculatorOptions_ConversionMode_USE_KEYPOINTS: {
-      RET_CHECK(detection_spec.image_size.has_value())
-          << "Rect with absolute coordinates calculation requires image size.";
-      const int width = detection_spec.image_size->first;
-      const int height = detection_spec.image_size->second;
-      NormalizedRect norm_rect;
-      MP_RETURN_IF_ERROR(NormRectFromKeyPoints(location_data, &norm_rect));
-      rect->set_x_center(std::round(norm_rect.x_center() * width));
-      rect->set_y_center(std::round(norm_rect.y_center() * height));
-      rect->set_width(std::round(norm_rect.width() * width));
-      rect->set_height(std::round(norm_rect.height() * height));
-      break;
-    }
+  case mediapipe::DetectionsToRectsCalculatorOptions_ConversionMode_DEFAULT:
+  case mediapipe::
+      DetectionsToRectsCalculatorOptions_ConversionMode_USE_BOUNDING_BOX: {
+    RET_CHECK(location_data.format() == LocationData::BOUNDING_BOX)
+        << "Only Detection with formats of BOUNDING_BOX can be converted to "
+           "Rect";
+    RectFromBox(location_data.bounding_box(), rect);
+    break;
   }
+  case mediapipe::
+      DetectionsToRectsCalculatorOptions_ConversionMode_USE_KEYPOINTS: {
+    RET_CHECK(detection_spec.image_size.has_value())
+        << "Rect with absolute coordinates calculation requires image size.";
+    const int width = detection_spec.image_size->first;
+    const int height = detection_spec.image_size->second;
+    NormalizedRect norm_rect;
+    MP_RETURN_IF_ERROR(NormRectFromKeyPoints(location_data, &norm_rect));
+    rect->set_x_center(std::round(norm_rect.x_center() * width));
+    rect->set_y_center(std::round(norm_rect.y_center() * height));
+    rect->set_width(std::round(norm_rect.width() * width));
+    rect->set_height(std::round(norm_rect.height() * height));
+    break;
+  }
+  }
+  rect->set_rect_id(detection.detection_id());
   return absl::OkStatus();
 }
 
 absl::Status DetectionsToRectsCalculator::DetectionToNormalizedRect(
-    const Detection& detection, const DetectionSpec& detection_spec,
-    NormalizedRect* rect) {
+    const Detection &detection, const DetectionSpec &detection_spec,
+    NormalizedRect *rect) {
   const LocationData location_data = detection.location_data();
   switch (options_.conversion_mode()) {
-    case mediapipe::DetectionsToRectsCalculatorOptions_ConversionMode_DEFAULT:
-    case mediapipe::
-        DetectionsToRectsCalculatorOptions_ConversionMode_USE_BOUNDING_BOX: {
-      RET_CHECK(location_data.format() == LocationData::RELATIVE_BOUNDING_BOX)
-          << "Only Detection with formats of RELATIVE_BOUNDING_BOX can be "
-             "converted to NormalizedRect";
-      RectFromBox(location_data.relative_bounding_box(), rect);
-      break;
-    }
-    case mediapipe::
-        DetectionsToRectsCalculatorOptions_ConversionMode_USE_KEYPOINTS: {
-      MP_RETURN_IF_ERROR(NormRectFromKeyPoints(location_data, rect));
-      break;
-    }
+  case mediapipe::DetectionsToRectsCalculatorOptions_ConversionMode_DEFAULT:
+  case mediapipe::
+      DetectionsToRectsCalculatorOptions_ConversionMode_USE_BOUNDING_BOX: {
+    RET_CHECK(location_data.format() == LocationData::RELATIVE_BOUNDING_BOX)
+        << "Only Detection with formats of RELATIVE_BOUNDING_BOX can be "
+           "converted to NormalizedRect";
+    RectFromBox(location_data.relative_bounding_box(), rect);
+    break;
   }
+  case mediapipe::
+      DetectionsToRectsCalculatorOptions_ConversionMode_USE_KEYPOINTS: {
+    MP_RETURN_IF_ERROR(NormRectFromKeyPoints(location_data, rect));
+    break;
+  }
+  }
+  rect->set_rect_id(detection.detection_id());
   return absl::OkStatus();
 }
 
-absl::Status DetectionsToRectsCalculator::GetContract(CalculatorContract* cc) {
+absl::Status DetectionsToRectsCalculator::GetContract(CalculatorContract *cc) {
   RET_CHECK(cc->Inputs().HasTag(kDetectionTag) ^
             cc->Inputs().HasTag(kDetectionsTag))
       << "Exactly one of DETECTION or DETECTIONS input stream should be "
@@ -166,7 +167,7 @@ absl::Status DetectionsToRectsCalculator::GetContract(CalculatorContract* cc) {
   return absl::OkStatus();
 }
 
-absl::Status DetectionsToRectsCalculator::Open(CalculatorContext* cc) {
+absl::Status DetectionsToRectsCalculator::Open(CalculatorContext *cc) {
   cc->SetOffset(TimestampDiff(0));
 
   options_ = cc->Options<DetectionsToRectsCalculatorOptions>();
@@ -194,7 +195,8 @@ absl::Status DetectionsToRectsCalculator::Open(CalculatorContext* cc) {
   return absl::OkStatus();
 }
 
-absl::Status DetectionsToRectsCalculator::Process(CalculatorContext* cc) {
+absl::Status DetectionsToRectsCalculator::Process(CalculatorContext *cc) {
+  std::cout << "in detections_to_rects_calculator.cc" << std::endl;
   if (cc->Inputs().HasTag(kDetectionTag) &&
       cc->Inputs().Tag(kDetectionTag).IsEmpty()) {
     return absl::OkStatus();
@@ -232,6 +234,7 @@ absl::Status DetectionsToRectsCalculator::Process(CalculatorContext* cc) {
       return absl::OkStatus();
     }
   }
+  std::cout << "    num detections " << detections.size() << std::endl;
 
   // Get dynamic calculator options (e.g. `image_size`).
   const DetectionSpec detection_spec = GetDetectionSpec(cc);
@@ -284,6 +287,10 @@ absl::Status DetectionsToRectsCalculator::Process(CalculatorContext* cc) {
     for (int i = 0; i < detections.size(); ++i) {
       MP_RETURN_IF_ERROR(DetectionToNormalizedRect(
           detections[i], detection_spec, &(output_rects->at(i))));
+      // std::cout << "   detections[i].detection_id() "
+      //           << detections[i].detection_id()
+      //           << " output_rects->at(i).rect_id() "
+      //           << output_rects->at(i).rect_id() << std::endl;
       if (rotate_) {
         float rotation;
         MP_RETURN_IF_ERROR(
@@ -291,6 +298,8 @@ absl::Status DetectionsToRectsCalculator::Process(CalculatorContext* cc) {
         output_rects->at(i).set_rotation(rotation);
       }
     }
+    std::cout << "    num rects " << output_rects->size() << std::endl;
+
     cc->Outputs()
         .Tag(kNormRectsTag)
         .Add(output_rects.release(), cc->InputTimestamp());
@@ -300,10 +309,10 @@ absl::Status DetectionsToRectsCalculator::Process(CalculatorContext* cc) {
 }
 
 absl::Status DetectionsToRectsCalculator::ComputeRotation(
-    const Detection& detection, const DetectionSpec& detection_spec,
-    float* rotation) {
-  const auto& location_data = detection.location_data();
-  const auto& image_size = detection_spec.image_size;
+    const Detection &detection, const DetectionSpec &detection_spec,
+    float *rotation) {
+  const auto &location_data = detection.location_data();
+  const auto &image_size = detection_spec.image_size;
   RET_CHECK(image_size) << "Image size is required to calculate rotation";
 
   const float x0 = location_data.relative_keypoints(start_keypoint_index_).x() *
@@ -320,8 +329,8 @@ absl::Status DetectionsToRectsCalculator::ComputeRotation(
   return absl::OkStatus();
 }
 
-DetectionSpec DetectionsToRectsCalculator::GetDetectionSpec(
-    const CalculatorContext* cc) {
+DetectionSpec
+DetectionsToRectsCalculator::GetDetectionSpec(const CalculatorContext *cc) {
   absl::optional<std::pair<int, int>> image_size;
   if (cc->Inputs().HasTag(kImageSizeTag)) {
     image_size = cc->Inputs().Tag(kImageSizeTag).Get<std::pair<int, int>>();
@@ -332,4 +341,4 @@ DetectionSpec DetectionsToRectsCalculator::GetDetectionSpec(
 
 REGISTER_CALCULATOR(DetectionsToRectsCalculator);
 
-}  // namespace mediapipe
+} // namespace mediapipe

@@ -1194,3 +1194,21 @@ cc_library(
     }),
     alwayslink = 1,
 )
+
+cc_library(
+    name = "detections_from_json_calculator",
+    srcs = [
+        "detections_from_json_calculator.cc",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//mediapipe/util/deps:nlohmann_json",
+        "//mediapipe/framework:calculator_framework",
+        "//mediapipe/framework/formats:image_frame",
+        "//mediapipe/framework:calculator_options_cc_proto",
+        "//mediapipe/framework/formats:detection_cc_proto",
+        "//mediapipe/framework/formats:location_data_cc_proto",
+        "//mediapipe/framework/port:status",
+    ],
+    alwayslink = 1,
+)

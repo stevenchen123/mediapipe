@@ -121,6 +121,16 @@ mediapipe_simple_subgraph(
 )
 
 mediapipe_simple_subgraph(
+    name = "object_detection_fasterrcnn_cpu",
+    graph = "object_detection_fasterrcnn_cpu.pbtxt",
+    register_as = "ObjectDetectionFasterrcnnSubgraphCpu",
+    deps = [
+        "//mediapipe/calculators/util:detections_from_json_calculator",
+        "//mediapipe/calculators/util:non_max_suppression_calculator",
+    ],
+)
+
+mediapipe_simple_subgraph(
     name = "renderer_gpu",
     graph = "renderer_gpu.pbtxt",
     register_as = "RendererSubgraphGpu",

@@ -28,7 +28,7 @@ namespace {
 constexpr char kLandmarksTag[] = "NORM_LANDMARKS";
 constexpr char kRectTag[] = "NORM_RECT";
 
-}  // namespace
+} // namespace
 
 // Projects normalized landmarks in a rectangle to its original coordinates. The
 // rectangle must also be in normalized coordinates.
@@ -59,8 +59,8 @@ constexpr char kRectTag[] = "NORM_RECT";
 //   output_stream: "NORM_LANDMARKS:1:projected_landmarks_1"
 // }
 class LandmarkProjectionCalculator : public CalculatorBase {
- public:
-  static absl::Status GetContract(CalculatorContract* cc) {
+public:
+  static absl::Status GetContract(CalculatorContract *cc) {
     RET_CHECK(cc->Inputs().HasTag(kLandmarksTag) &&
               cc->Inputs().HasTag(kRectTag))
         << "Missing one or more input streams.";
@@ -83,36 +83,37 @@ class LandmarkProjectionCalculator : public CalculatorBase {
     return absl::OkStatus();
   }
 
-  absl::Status Open(CalculatorContext* cc) override {
+  absl::Status Open(CalculatorContext *cc) override {
     cc->SetOffset(TimestampDiff(0));
 
     return absl::OkStatus();
   }
 
-  absl::Status Process(CalculatorContext* cc) override {
+  absl::Status Process(CalculatorContext *cc) override {
+    std::cout << "in landmark_projection_calculator " << std::endl;
     if (cc->Inputs().Tag(kRectTag).IsEmpty()) {
       return absl::OkStatus();
     }
-    const auto& input_rect = cc->Inputs().Tag(kRectTag).Get<NormalizedRect>();
+    const auto &input_rect = cc->Inputs().Tag(kRectTag).Get<NormalizedRect>();
 
-    const auto& options =
+    const auto &options =
         cc->Options<::mediapipe::LandmarkProjectionCalculatorOptions>();
 
     CollectionItemId input_id = cc->Inputs().BeginId(kLandmarksTag);
     CollectionItemId output_id = cc->Outputs().BeginId(kLandmarksTag);
-    // Number of inputs and outpus is the same according to the contract.
+    // Number of inputs and outputs is the same according to the contract.
     for (; input_id != cc->Inputs().EndId(kLandmarksTag);
          ++input_id, ++output_id) {
-      const auto& input_packet = cc->Inputs().Get(input_id);
+      const auto &input_packet = cc->Inputs().Get(input_id);
       if (input_packet.IsEmpty()) {
         continue;
       }
 
-      const auto& input_landmarks = input_packet.Get<NormalizedLandmarkList>();
+      const auto &input_landmarks = input_packet.Get<NormalizedLandmarkList>();
       NormalizedLandmarkList output_landmarks;
       for (int i = 0; i < input_landmarks.landmark_size(); ++i) {
-        const NormalizedLandmark& landmark = input_landmarks.landmark(i);
-        NormalizedLandmark* new_landmark = output_landmarks.add_landmark();
+        const NormalizedLandmark &landmark = input_landmarks.landmark(i);
+        NormalizedLandmark *new_landmark = output_landmarks.add_landmark();
 
         const float x = landmark.x() - 0.5f;
         const float y = landmark.y() - 0.5f;
@@ -124,13 +125,20 @@ class LandmarkProjectionCalculator : public CalculatorBase {
         new_x = new_x * input_rect.width() + input_rect.x_center();
         new_y = new_y * input_rect.height() + input_rect.y_center();
         const float new_z =
-            landmark.z() * input_rect.width();  // Scale Z coordinate as X.
+            landmark.z() * input_rect.width(); // Scale Z coordinate as X.
 
         *new_landmark = landmark;
         new_landmark->set_x(new_x);
         new_landmark->set_y(new_y);
         new_landmark->set_z(new_z);
       }
+      output_landmarks.set_landmark_list_id(input_rect.rect_id());
+      std::cout << "      output_landmarks.landmark_list_id() "
+                << output_landmarks.landmark_list_id()
+                << "; input_rect.rect_id() " << input_rect.rect_id()
+                << std::endl;
+      std::cout << "      output_landmarks.landmarks_size() "
+                << output_landmarks.landmark_size() << std::endl;
 
       cc->Outputs().Get(output_id).AddPacket(
           MakePacket<NormalizedLandmarkList>(output_landmarks)
@@ -141,4 +149,4 @@ class LandmarkProjectionCalculator : public CalculatorBase {
 };
 REGISTER_CALCULATOR(LandmarkProjectionCalculator);
 
-}  // namespace mediapipe
+} // namespace mediapipe

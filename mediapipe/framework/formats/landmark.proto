@@ -45,6 +45,7 @@ message Landmark {
 // Group of Landmark protos.
 message LandmarkList {
   repeated Landmark landmark = 1;
+  optional int64 landmark_list_id = 2 [default = -1];
 }
 
 // A normalized version of above Landmark proto. All coordiates should be within
@@ -60,4 +61,5 @@ message NormalizedLandmark {
 // Group of NormalizedLandmark protos.
 message NormalizedLandmarkList {
   repeated NormalizedLandmark landmark = 1;
+  optional int64 landmark_list_id = 2 [default = -1];
 }

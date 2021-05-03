@@ -33,7 +33,7 @@ inline float NormalizeRadians(float angle) {
   return angle - 2 * M_PI * std::floor((angle - (-M_PI)) / (2 * M_PI));
 }
 
-}  // namespace
+} // namespace
 
 // Performs geometric transformation to the input Rect or NormalizedRect,
 // correpsonding to input stream RECT or NORM_RECT respectively. When the input
@@ -56,23 +56,23 @@ inline float NormalizeRadians(float angle) {
 //   }
 // }
 class RectTransformationCalculator : public CalculatorBase {
- public:
-  static absl::Status GetContract(CalculatorContract* cc);
+public:
+  static absl::Status GetContract(CalculatorContract *cc);
 
-  absl::Status Open(CalculatorContext* cc) override;
-  absl::Status Process(CalculatorContext* cc) override;
+  absl::Status Open(CalculatorContext *cc) override;
+  absl::Status Process(CalculatorContext *cc) override;
 
- private:
+private:
   RectTransformationCalculatorOptions options_;
 
   float ComputeNewRotation(float rotation);
-  void TransformRect(Rect* rect);
-  void TransformNormalizedRect(NormalizedRect* rect, int image_width,
+  void TransformRect(Rect *rect);
+  void TransformNormalizedRect(NormalizedRect *rect, int image_width,
                                int image_height);
 };
 REGISTER_CALCULATOR(RectTransformationCalculator);
 
-absl::Status RectTransformationCalculator::GetContract(CalculatorContract* cc) {
+absl::Status RectTransformationCalculator::GetContract(CalculatorContract *cc) {
   RET_CHECK_EQ((cc->Inputs().HasTag(kNormRectTag) ? 1 : 0) +
                    (cc->Inputs().HasTag(kNormRectsTag) ? 1 : 0) +
                    (cc->Inputs().HasTag(kRectTag) ? 1 : 0) +
@@ -102,7 +102,7 @@ absl::Status RectTransformationCalculator::GetContract(CalculatorContract* cc) {
   return absl::OkStatus();
 }
 
-absl::Status RectTransformationCalculator::Open(CalculatorContext* cc) {
+absl::Status RectTransformationCalculator::Open(CalculatorContext *cc) {
   cc->SetOffset(TimestampDiff(0));
 
   options_ = cc->Options<RectTransformationCalculatorOptions>();
@@ -112,7 +112,7 @@ absl::Status RectTransformationCalculator::Open(CalculatorContext* cc) {
   return absl::OkStatus();
 }
 
-absl::Status RectTransformationCalculator::Process(CalculatorContext* cc) {
+absl::Status RectTransformationCalculator::Process(CalculatorContext *cc) {
   if (cc->Inputs().HasTag(kRectTag) && !cc->Inputs().Tag(kRectTag).IsEmpty()) {
     auto rect = cc->Inputs().Tag(kRectTag).Get<Rect>();
     TransformRect(&rect);
@@ -133,7 +133,9 @@ absl::Status RectTransformationCalculator::Process(CalculatorContext* cc) {
   if (cc->Inputs().HasTag(kNormRectTag) &&
       !cc->Inputs().Tag(kNormRectTag).IsEmpty()) {
     auto rect = cc->Inputs().Tag(kNormRectTag).Get<NormalizedRect>();
-    const auto& image_size =
+    // std::cout << "in rect_transformation_calculator; input rect_id "
+    //           << rect.rect_id() << std::endl;
+    const auto &image_size =
         cc->Inputs().Tag(kImageSizeTag).Get<std::pair<int, int>>();
     TransformNormalizedRect(&rect, image_size.first, image_size.second);
     cc->Outputs().Index(0).AddPacket(
@@ -143,7 +145,7 @@ absl::Status RectTransformationCalculator::Process(CalculatorContext* cc) {
       !cc->Inputs().Tag(kNormRectsTag).IsEmpty()) {
     auto rects =
         cc->Inputs().Tag(kNormRectsTag).Get<std::vector<NormalizedRect>>();
-    const auto& image_size =
+    const auto &image_size =
         cc->Inputs().Tag(kImageSizeTag).Get<std::pair<int, int>>();
     auto output_rects =
         absl::make_unique<std::vector<NormalizedRect>>(rects.size());
@@ -167,7 +169,7 @@ float RectTransformationCalculator::ComputeNewRotation(float rotation) {
   return NormalizeRadians(rotation);
 }
 
-void RectTransformationCalculator::TransformRect(Rect* rect) {
+void RectTransformationCalculator::TransformRect(Rect *rect) {
   float width = rect->width();
   float height = rect->height();
   float rotation = rect->rotation();
@@ -200,7 +202,7 @@ void RectTransformationCalculator::TransformRect(Rect* rect) {
   rect->set_height(height * options_.scale_y());
 }
 
-void RectTransformationCalculator::TransformNormalizedRect(NormalizedRect* rect,
+void RectTransformationCalculator::TransformNormalizedRect(NormalizedRect *rect,
                                                            int image_width,
                                                            int image_height) {
   float width = rect->width();
@@ -241,4 +243,4 @@ void RectTransformationCalculator::TransformNormalizedRect(NormalizedRect* rect,
   rect->set_height(height * options_.scale_y());
 }
 
-}  // namespace mediapipe
+} // namespace mediapipe

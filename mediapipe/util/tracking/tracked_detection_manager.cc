@@ -30,7 +30,7 @@ bool IsPointOutOfView(float x, float y) {
 }
 
 // Checks if all corners of a bounding box of an object are out of view.
-bool AreCornersOutOfView(const TrackedDetection& object) {
+bool AreCornersOutOfView(const TrackedDetection &object) {
   std::array<Vector2_f, 4> corners = object.GetCorners();
   for (int k = 0; k < 4; ++k) {
     if (!IsPointOutOfView(corners[k].x(), corners[k].y())) {
@@ -39,7 +39,7 @@ bool AreCornersOutOfView(const TrackedDetection& object) {
   }
   return true;
 }
-}  // namespace
+} // namespace
 
 namespace mediapipe {
 
@@ -51,8 +51,8 @@ std::vector<int> TrackedDetectionManager::AddDetection(
   // TODO: All detections should be fastforwarded to the current
   // timestamp before adding the detection manager. E.g. only check they are the
   // same if the timestamp are the same.
-  for (auto& existing_detection_ptr : detections_) {
-    const auto& existing_detection = *existing_detection_ptr.second;
+  for (auto &existing_detection_ptr : detections_) {
+    const auto &existing_detection = *existing_detection_ptr.second;
     if (detection->IsSameAs(existing_detection,
                             config_.is_same_detection_max_area_ratio(),
                             config_.is_same_detection_min_overlap_ratio())) {
@@ -85,15 +85,18 @@ std::vector<int> TrackedDetectionManager::AddDetection(
 }
 
 std::vector<int> TrackedDetectionManager::UpdateDetectionLocation(
-    int id, const NormalizedRect& bounding_box, int64 timestamp) {
+    int id, const NormalizedRect &bounding_box, int64 timestamp) {
   // TODO: Remove all boxes that are not updating.
   auto detection_ptr = detections_.find(id);
   if (detection_ptr == detections_.end()) {
     return std::vector<int>();
   }
-  auto& detection = *detection_ptr->second;
+  auto &detection = *detection_ptr->second;
+  // std::cout << "time elapsed: "
+  //           << timestamp - detection.last_updated_timestamp() << std::endl;
   detection.set_bounding_box(bounding_box);
-  detection.set_last_updated_timestamp(timestamp);
+
+  // detection.set_last_updated_timestamp(timestamp);
 
   // It's required to do this here in addition to in AddDetection because during
   // fast motion, two or more detections of the same object could coexist since
@@ -102,10 +105,13 @@ std::vector<int> TrackedDetectionManager::UpdateDetectionLocation(
   return RemoveDuplicatedDetections(detection.unique_id());
 }
 
-std::vector<int> TrackedDetectionManager::RemoveObsoleteDetections(
-    int64 timestamp) {
+std::vector<int>
+TrackedDetectionManager::RemoveObsoleteDetections(int64 timestamp) {
   std::vector<int> ids_to_remove;
-  for (auto& existing_detection : detections_) {
+
+  for (auto &existing_detection : detections_) {
+    // std::cout << existing_detection.second->last_updated_timestamp() << " "
+    //           << timestamp << std::endl;
     if (existing_detection.second->last_updated_timestamp() < timestamp) {
       ids_to_remove.push_back(existing_detection.first);
     }
@@ -118,7 +124,7 @@ std::vector<int> TrackedDetectionManager::RemoveObsoleteDetections(
 
 std::vector<int> TrackedDetectionManager::RemoveOutOfViewDetections() {
   std::vector<int> ids_to_remove;
-  for (auto& existing_detection : detections_) {
+  for (auto &existing_detection : detections_) {
     if (AreCornersOutOfView(*existing_detection.second)) {
       ids_to_remove.push_back(existing_detection.first);
     }
@@ -135,15 +141,15 @@ std::vector<int> TrackedDetectionManager::RemoveDuplicatedDetections(int id) {
   if (detection_ptr == detections_.end()) {
     return ids_to_remove;
   }
-  auto& detection = *detection_ptr->second;
+  auto &detection = *detection_ptr->second;
 
   // For duplciated detections, we keep the one that's added most recently.
   auto latest_detection = detection_ptr->second.get();
   // For setting up the |previous_id| of the latest detection. For now, if there
   // are multiple duplicated detections at the same timestamp, we will use the
   // one that has the second latest initial timestamp
-  const TrackedDetection* previous_detection = nullptr;
-  for (auto& existing_detection : detections_) {
+  const TrackedDetection *previous_detection = nullptr;
+  for (auto &existing_detection : detections_) {
     auto other = *(existing_detection.second);
     if (detection.unique_id() != other.unique_id()) {
       // Only check if they are updated at the same timestamp. Comparing
@@ -153,7 +159,7 @@ std::vector<int> TrackedDetectionManager::RemoveDuplicatedDetections(int id) {
         if (detection.IsSameAs(other,
                                config_.is_same_detection_max_area_ratio(),
                                config_.is_same_detection_min_overlap_ratio())) {
-          const TrackedDetection* detection_to_remove = nullptr;
+          const TrackedDetection *detection_to_remove = nullptr;
           if (latest_detection->initial_timestamp() >=
               other.initial_timestamp()) {
             // Removes the earlier one.
@@ -192,4 +198,4 @@ std::vector<int> TrackedDetectionManager::RemoveDuplicatedDetections(int id) {
   return ids_to_remove;
 }
 
-}  // namespace mediapipe
+} // namespace mediapipe

@@ -17,16 +17,17 @@ syntax = "proto2";
 package mediapipe;
 
 import "mediapipe/framework/calculator.proto";
-import "mediapipe/util/tracking/tracked_detection_manager_config.proto";
 
-message TrackedDetectionManagerCalculatorOptions {
+message FilterDetectionByRegionCalculatorOptions {
   extend CalculatorOptions {
-    optional TrackedDetectionManagerCalculatorOptions ext = 301970230;
+    optional FilterDetectionByRegionCalculatorOptions ext = 339587531;
   }
+  // assuming a detection is parameterized as a bounding box with relative coordinates,
+  // reject the detection if any of its corner is outside (r, r) <-> (1-r, 1-r)
+  optional float reject_border_width = 1 [default = 0.0];
 
-  optional TrackedDetectionManagerConfig tracked_detection_manager_options = 1;
-  // time to persist a tracked detection (id) since last detection
-  optional int64 time_to_persist_since_last_detection = 2 [default = 5000];
-  // time to visualize (output) a tracked detection (id) since lasat detection
-  optional int64 time_to_show_since_last_detection = 3 [default = 1000];
+  // TODO 
+  // assuming a detection is parameterized as a bounding box with relative coordinates,
+  // reject the detection if its area is less than this value
+  optional float reject_by_area = 2 [default = 0.0];
 }

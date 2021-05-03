@@ -69,10 +69,13 @@ cc_library(
     deps = [
         "//mediapipe/calculators/core:packet_resampler_calculator",
         "//mediapipe/graphs/object_detection_3d/subgraphs:object_tracking_cpu",
-        "//mediapipe/graphs/object_detection_3d/subgraphs:renderer_tracking_cpu",
-        "//mediapipe/graphs/object_detection_3d/subgraphs:object_detection_cpu_new",
-        "//mediapipe/graphs/object_detection_3d/subgraphs:object_detection_3d_cpu",
         # edits
+        "//mediapipe/graphs/object_detection_3d/subgraphs:renderer_tracking_cpu",
+        "//mediapipe/graphs/object_detection_3d/subgraphs:object_detection_3d_cpu",
+        "//mediapipe/graphs/object_detection_3d/subgraphs:object_detection_cpu_new",
+        "//mediapipe/graphs/object_detection_3d/subgraphs:object_detection_from_json",
+        "//mediapipe/modules/objectron/calculators:filter_detection_by_region_calculator",
+        "//mediapipe/modules/objectron/calculators:write_to_json_file_calculator",
         "//mediapipe/calculators/util:detections_to_render_data_calculator",
         "//mediapipe/calculators/video:opencv_video_decoder_calculator",
         "//mediapipe/calculators/video:opencv_video_encoder_calculator",

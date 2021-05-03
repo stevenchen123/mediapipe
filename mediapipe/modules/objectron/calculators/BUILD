@@ -125,6 +125,16 @@ mediapipe_proto_library(
     ],
 )
 
+mediapipe_proto_library(
+    name = "filter_detection_by_region_calculator_proto",
+    srcs = ["filter_detection_by_region_calculator.proto"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//mediapipe/framework:calculator_options_proto",
+        "//mediapipe/framework:calculator_proto",
+    ],
+)
+
 cc_library(
     name = "box_util",
     srcs = ["box_util.cc"],
@@ -347,6 +357,20 @@ cc_library(
 )
 
 cc_library(
+    name = "filter_detection_by_region_calculator",
+    srcs = ["filter_detection_by_region_calculator.cc"],
+    deps = [
+        ":filter_detection_by_region_calculator_cc_proto",
+        "//mediapipe/framework:calculator_framework",
+        "//mediapipe/framework/formats:detection_cc_proto",
+        "//mediapipe/framework/formats:location_data_cc_proto",
+        "//mediapipe/framework/port:logging",
+        "//mediapipe/framework/port:status",
+    ],
+    alwayslink = 1,
+)
+
+cc_library(
     name = "filter_detection_calculator",
     srcs = ["filter_detection_calculator.cc"],
     deps = [
@@ -386,4 +410,38 @@ cc_test(
         "//mediapipe/util/tracking:box_tracker_cc_proto",
         "@com_google_absl//absl/container:flat_hash_set",
     ],
+)
+
+cc_library(
+    name = "association_detection_annotation_by_order_calculator",
+    srcs = ["association_detection_annotation_by_order_calculator.cc"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":annotation_cc_proto",
+        "//mediapipe/framework:calculator_context",
+        "//mediapipe/framework:calculator_framework",
+        "//mediapipe/framework/formats:detection_cc_proto",
+        "//mediapipe/framework/formats:location",
+        "//mediapipe/framework/port:status",
+    ],
+    alwayslink = 1,
+)
+
+cc_library(
+    name = "write_to_json_file_calculator",
+    srcs = [
+        "write_to_json_file_calculator.cc",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//mediapipe/util/deps:nlohmann_json",
+        "//mediapipe/framework:calculator_framework",
+        "//mediapipe/framework/formats:image_frame",
+        "//mediapipe/framework:calculator_options_cc_proto",
+        "//mediapipe/framework/formats:detection_cc_proto",
+        "//mediapipe/framework/formats:location_data_cc_proto",
+        "//mediapipe/modules/objectron/calculators:annotation_cc_proto",
+        "//mediapipe/framework/port:status",
+    ],
+    alwayslink = 1,
 )

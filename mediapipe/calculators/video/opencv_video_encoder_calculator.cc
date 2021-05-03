@@ -75,21 +75,22 @@ namespace mediapipe {
 // }
 //
 class OpenCvVideoEncoderCalculator : public CalculatorBase {
- public:
-  static absl::Status GetContract(CalculatorContract* cc);
-  absl::Status Open(CalculatorContext* cc) override;
-  absl::Status Process(CalculatorContext* cc) override;
-  absl::Status Close(CalculatorContext* cc) override;
+public:
+  static absl::Status GetContract(CalculatorContract *cc);
+  absl::Status Open(CalculatorContext *cc) override;
+  absl::Status Process(CalculatorContext *cc) override;
+  absl::Status Close(CalculatorContext *cc) override;
 
- private:
+private:
   absl::Status SetUpVideoWriter(float frame_rate, int width, int height);
 
   std::string output_file_path_;
   int four_cc_;
   std::unique_ptr<cv::VideoWriter> writer_;
+  int frame_id_ = -1;
 };
 
-absl::Status OpenCvVideoEncoderCalculator::GetContract(CalculatorContract* cc) {
+absl::Status OpenCvVideoEncoderCalculator::GetContract(CalculatorContract *cc) {
   RET_CHECK(cc->Inputs().HasTag("VIDEO"));
   cc->Inputs().Tag("VIDEO").Set<ImageFrame>();
   if (cc->Inputs().HasTag("VIDEO_PRESTREAM")) {
@@ -103,13 +104,13 @@ absl::Status OpenCvVideoEncoderCalculator::GetContract(CalculatorContract* cc) {
   return absl::OkStatus();
 }
 
-absl::Status OpenCvVideoEncoderCalculator::Open(CalculatorContext* cc) {
+absl::Status OpenCvVideoEncoderCalculator::Open(CalculatorContext *cc) {
   OpenCvVideoEncoderCalculatorOptions options =
       cc->Options<OpenCvVideoEncoderCalculatorOptions>();
   RET_CHECK(options.has_codec() && options.codec().length() == 4)
       << "A 4-character codec code must be specified in "
          "OpenCvVideoEncoderCalculatorOptions";
-  const char* codec_array = options.codec().c_str();
+  const char *codec_array = options.codec().c_str();
   four_cc_ = mediapipe::fourcc(codec_array[0], codec_array[1], codec_array[2],
                                codec_array[3]);
   RET_CHECK(!options.video_format().empty())
@@ -132,16 +133,18 @@ absl::Status OpenCvVideoEncoderCalculator::Open(CalculatorContext* cc) {
   return SetUpVideoWriter(options.fps(), options.width(), options.height());
 }
 
-absl::Status OpenCvVideoEncoderCalculator::Process(CalculatorContext* cc) {
+absl::Status OpenCvVideoEncoderCalculator::Process(CalculatorContext *cc) {
+  frame_id_++;
   if (cc->InputTimestamp() == Timestamp::PreStream()) {
-    const VideoHeader& video_header =
+    const VideoHeader &video_header =
         cc->Inputs().Tag("VIDEO_PRESTREAM").Get<VideoHeader>();
     return SetUpVideoWriter(video_header.frame_rate, video_header.width,
                             video_header.height);
   }
 
-  const ImageFrame& image_frame =
+  const ImageFrame &image_frame =
       cc->Inputs().Tag("VIDEO").Value().Get<ImageFrame>();
+
   ImageFormat::Format format = image_frame.Format();
   cv::Mat frame;
   if (format == ImageFormat::GRAY8) {
@@ -173,13 +176,13 @@ absl::Status OpenCvVideoEncoderCalculator::Process(CalculatorContext* cc) {
   return absl::OkStatus();
 }
 
-absl::Status OpenCvVideoEncoderCalculator::Close(CalculatorContext* cc) {
+absl::Status OpenCvVideoEncoderCalculator::Close(CalculatorContext *cc) {
   if (writer_ && writer_->isOpened()) {
     writer_->release();
   }
   if (cc->InputSidePackets().HasTag("AUDIO_FILE_PATH")) {
 #ifdef HAVE_FFMPEG
-    const std::string& audio_file_path =
+    const std::string &audio_file_path =
         cc->InputSidePackets().Tag("AUDIO_FILE_PATH").Get<std::string>();
     if (audio_file_path.empty()) {
       LOG(WARNING) << "OpenCvVideoEncoderCalculator isn't able to attach the "
@@ -223,4 +226,4 @@ absl::Status OpenCvVideoEncoderCalculator::SetUpVideoWriter(float frame_rate,
 }
 
 REGISTER_CALCULATOR(OpenCvVideoEncoderCalculator);
-}  // namespace mediapipe
+} // namespace mediapipe

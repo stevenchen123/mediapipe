@@ -40,18 +40,18 @@ constexpr char kTrackingBoxesTag[] = "TRACKING_BOXES";
 constexpr char kCancelObjectIdTag[] = "CANCEL_OBJECT_ID";
 
 // Move |src| to the back of |dst|.
-void MoveIds(std::vector<int>* dst, std::vector<int> src) {
+void MoveIds(std::vector<int> *dst, std::vector<int> src) {
   dst->insert(dst->end(), std::make_move_iterator(src.begin()),
               std::make_move_iterator(src.end()));
 }
 
-int64 GetInputTimestampMs(::mediapipe::CalculatorContext* cc) {
-  return cc->InputTimestamp().Microseconds() / 1000;  // 1 ms = 1000 us.
+int64 GetInputTimestampMs(::mediapipe::CalculatorContext *cc) {
+  return cc->InputTimestamp().Microseconds() / 1000; // 1 ms = 1000 us.
 }
 
 // Converts a Mediapipe Detection Proto to a TrackedDetection class.
-std::unique_ptr<TrackedDetection> GetTrackedDetectionFromDetection(
-    const Detection& detection, int64 timestamp) {
+std::unique_ptr<TrackedDetection>
+GetTrackedDetectionFromDetection(const Detection &detection, int64 timestamp) {
   std::unique_ptr<TrackedDetection> tracked_detection =
       absl::make_unique<TrackedDetection>(detection.detection_id(), timestamp);
   const float top = detection.location_data().relative_bounding_box().ymin();
@@ -76,9 +76,9 @@ std::unique_ptr<TrackedDetection> GetTrackedDetectionFromDetection(
 
 // Converts a TrackedDetection class to a Mediapipe Detection Proto.
 Detection GetAxisAlignedDetectionFromTrackedDetection(
-    const TrackedDetection& tracked_detection) {
+    const TrackedDetection &tracked_detection) {
   Detection detection;
-  LocationData* location_data = detection.mutable_location_data();
+  LocationData *location_data = detection.mutable_location_data();
 
   auto corners = tracked_detection.GetCorners();
 
@@ -93,7 +93,7 @@ Detection GetAxisAlignedDetectionFromTrackedDetection(
     y_max = std::max(y_max, corners[i].y());
   }
   location_data->set_format(LocationData::RELATIVE_BOUNDING_BOX);
-  LocationData::RelativeBoundingBox* relative_bbox =
+  LocationData::RelativeBoundingBox *relative_bbox =
       location_data->mutable_relative_bounding_box();
   relative_bbox->set_xmin(x_min);
   relative_bbox->set_ymin(y_min);
@@ -109,19 +109,19 @@ Detection GetAxisAlignedDetectionFromTrackedDetection(
 
   // Sort the labels by descending scores.
   std::vector<std::pair<std::string, float>> labels_and_scores;
-  for (const auto& label_and_score : tracked_detection.label_to_score_map()) {
+  for (const auto &label_and_score : tracked_detection.label_to_score_map()) {
     labels_and_scores.push_back(label_and_score);
   }
   std::sort(labels_and_scores.begin(), labels_and_scores.end(),
-            [](const auto& a, const auto& b) { return a.second > b.second; });
-  for (const auto& label_and_score : labels_and_scores) {
+            [](const auto &a, const auto &b) { return a.second > b.second; });
+  for (const auto &label_and_score : labels_and_scores) {
     detection.add_label(label_and_score.first);
     detection.add_score(label_and_score.second);
   }
   return detection;
 }
 
-}  // namespace
+} // namespace
 
 // TrackedDetectionManagerCalculator accepts detections and tracking results at
 // different frame rate for real time tracking of targets.
@@ -146,18 +146,18 @@ Detection GetAxisAlignedDetectionFromTrackedDetection(
 //   output_stream: "DETECTIONS:output_detections"
 // }
 class TrackedDetectionManagerCalculator : public CalculatorBase {
- public:
-  static absl::Status GetContract(CalculatorContract* cc);
-  absl::Status Open(CalculatorContext* cc) override;
+public:
+  static absl::Status GetContract(CalculatorContract *cc);
+  absl::Status Open(CalculatorContext *cc) override;
 
-  absl::Status Process(CalculatorContext* cc) override;
+  absl::Status Process(CalculatorContext *cc) override;
 
- private:
+private:
   // Adds new list of detections to |waiting_for_update_detections_|.
-  void AddDetectionList(const DetectionList& detection_list,
-                        CalculatorContext* cc);
-  void AddDetections(const std::vector<Detection>& detections,
-                     CalculatorContext* cc);
+  void AddDetectionList(const DetectionList &detection_list,
+                        CalculatorContext *cc);
+  void AddDetections(const std::vector<Detection> &detections,
+                     CalculatorContext *cc);
 
   // Manages existing and new detections.
   TrackedDetectionManager tracked_detection_manager_;
@@ -169,8 +169,8 @@ class TrackedDetectionManagerCalculator : public CalculatorBase {
 };
 REGISTER_CALCULATOR(TrackedDetectionManagerCalculator);
 
-absl::Status TrackedDetectionManagerCalculator::GetContract(
-    CalculatorContract* cc) {
+absl::Status
+TrackedDetectionManagerCalculator::GetContract(CalculatorContract *cc) {
   if (cc->Inputs().HasTag(kDetectionsTag)) {
     cc->Inputs().Tag(kDetectionsTag).Set<std::vector<Detection>>();
   }
@@ -194,7 +194,7 @@ absl::Status TrackedDetectionManagerCalculator::GetContract(
   return absl::OkStatus();
 }
 
-absl::Status TrackedDetectionManagerCalculator::Open(CalculatorContext* cc) {
+absl::Status TrackedDetectionManagerCalculator::Open(CalculatorContext *cc) {
   mediapipe::TrackedDetectionManagerCalculatorOptions options =
       cc->Options<mediapipe::TrackedDetectionManagerCalculatorOptions>();
   tracked_detection_manager_.SetConfig(
@@ -202,15 +202,16 @@ absl::Status TrackedDetectionManagerCalculator::Open(CalculatorContext* cc) {
   return absl::OkStatus();
 }
 
-absl::Status TrackedDetectionManagerCalculator::Process(CalculatorContext* cc) {
+absl::Status TrackedDetectionManagerCalculator::Process(CalculatorContext *cc) {
+  const auto &options = cc->Options<TrackedDetectionManagerCalculatorOptions>();
   if (cc->Inputs().HasTag(kTrackingBoxesTag) &&
       !cc->Inputs().Tag(kTrackingBoxesTag).IsEmpty()) {
-    const TimedBoxProtoList& tracked_boxes =
+    const TimedBoxProtoList &tracked_boxes =
         cc->Inputs().Tag(kTrackingBoxesTag).Get<TimedBoxProtoList>();
 
     // Collect all detections that are removed.
     auto removed_detection_ids = absl::make_unique<std::vector<int>>();
-    for (const TimedBoxProto& tracked_box : tracked_boxes.box()) {
+    for (const TimedBoxProto &tracked_box : tracked_boxes.box()) {
       NormalizedRect bounding_box;
       bounding_box.set_x_center((tracked_box.left() + tracked_box.right()) /
                                 2.f);
@@ -237,8 +238,14 @@ absl::Status TrackedDetectionManagerCalculator::Process(CalculatorContext* cc) {
       MoveIds(removed_detection_ids.get(), std::move(removed_ids));
     }
     // TODO: Should be handled automatically in detection manager.
+    // auto removed_ids = tracked_detection_manager_.RemoveObsoleteDetections(
+    //     GetInputTimestampMs(cc) - kDetectionUpdateTimeOutMS);
+    // std::cout << "in tracked_detection_manager_calculator" << std::endl;
+    // std::cout << options.time_to_persist_since_last_detection() << std::endl;
+
     auto removed_ids = tracked_detection_manager_.RemoveObsoleteDetections(
-        GetInputTimestampMs(cc) - kDetectionUpdateTimeOutMS);
+        GetInputTimestampMs(cc) -
+        options.time_to_persist_since_last_detection());
     MoveIds(removed_detection_ids.get(), std::move(removed_ids));
 
     // TODO: Should be handled automatically in detection manager.
@@ -259,15 +266,16 @@ absl::Status TrackedDetectionManagerCalculator::Process(CalculatorContext* cc) {
     }
 
     // Output detections and corresponding bounding boxes.
-    const auto& all_detections =
+    const auto &all_detections =
         tracked_detection_manager_.GetAllTrackedDetections();
     auto output_detections = absl::make_unique<std::vector<Detection>>();
     auto output_boxes = absl::make_unique<std::vector<NormalizedRect>>();
 
-    for (const auto& detection_ptr : all_detections) {
-      const auto& detection = *detection_ptr.second;
+    for (const auto &detection_ptr : all_detections) {
+      const auto &detection = *detection_ptr.second;
       // Only output detections that are synced.
-      if (detection.last_updated_timestamp() <
+      if (detection.last_updated_timestamp() +
+              options.time_to_show_since_last_detection() <
           cc->InputTimestamp().Microseconds() / 1000) {
         continue;
       }
@@ -306,8 +314,8 @@ absl::Status TrackedDetectionManagerCalculator::Process(CalculatorContext* cc) {
 }
 
 void TrackedDetectionManagerCalculator::AddDetectionList(
-    const DetectionList& detection_list, CalculatorContext* cc) {
-  for (const auto& detection : detection_list.detection()) {
+    const DetectionList &detection_list, CalculatorContext *cc) {
+  for (const auto &detection : detection_list.detection()) {
     // Convert from microseconds to milliseconds.
     std::unique_ptr<TrackedDetection> new_detection =
         GetTrackedDetectionFromDetection(
@@ -319,8 +327,8 @@ void TrackedDetectionManagerCalculator::AddDetectionList(
 }
 
 void TrackedDetectionManagerCalculator::AddDetections(
-    const std::vector<Detection>& detections, CalculatorContext* cc) {
-  for (const auto& detection : detections) {
+    const std::vector<Detection> &detections, CalculatorContext *cc) {
+  for (const auto &detection : detections) {
     // Convert from microseconds to milliseconds.
     std::unique_ptr<TrackedDetection> new_detection =
         GetTrackedDetectionFromDetection(
@@ -331,4 +339,4 @@ void TrackedDetectionManagerCalculator::AddDetections(
   }
 }
 
-}  // namespace mediapipe
+} // namespace mediapipe

@@ -1,0 +1,30 @@
+# MediaPipe object detection from json subgraph.
+
+type: "ObjectDetectionFasterrcnnSubgraphCpu"
+      
+input_stream: "IMAGE:input_video"
+input_side_packet: "FILENAME:json_filename"
+output_stream: "DETECTIONS:output_detections"
+
+# Load pre-computed bounding boxes from a json file
+node {
+  calculator: "DetectionsFromJsonCalculator"
+  input_stream: "IMAGE:input_video"
+  input_side_packet: "FILENAME:json_filename"
+  output_stream: "DETECTIONS:loaded_detections"
+}
+
+# Performs non-max suppression to remove excessive detections.
+node {
+  calculator: "NonMaxSuppressionCalculator"
+  input_stream: "loaded_detections"
+  output_stream: "output_detections"
+  node_options: {
+    [type.googleapis.com/mediapipe.NonMaxSuppressionCalculatorOptions] {
+      min_suppression_threshold: 0.4
+      min_score_threshold: 0.8
+      max_num_detections: 20
+      overlap_type: INTERSECTION_OVER_UNION
+    }
+  }
+}

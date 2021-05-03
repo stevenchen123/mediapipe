@@ -36,14 +36,14 @@ namespace {
 
 constexpr char kImageTag[] = "IMAGE";
 
-bool SortBySecond(const std::pair<int, float>& indexed_score_0,
-                  const std::pair<int, float>& indexed_score_1) {
+bool SortBySecond(const std::pair<int, float> &indexed_score_0,
+                  const std::pair<int, float> &indexed_score_1) {
   return (indexed_score_0.second > indexed_score_1.second);
 }
 
 // Removes all but the max scoring label and its score from the detection.
 // Returns true if the detection has at least one label.
-bool RetainMaxScoringLabelOnly(Detection* detection) {
+bool RetainMaxScoringLabelOnly(Detection *detection) {
   if (detection->label_id_size() == 0 && detection->label_size() == 0) {
     return false;
   }
@@ -77,22 +77,23 @@ bool RetainMaxScoringLabelOnly(Detection* detection) {
 // defined by overlap_type parameter.
 float OverlapSimilarity(
     const NonMaxSuppressionCalculatorOptions::OverlapType overlap_type,
-    const Rectangle_f& rect1, const Rectangle_f& rect2) {
-  if (!rect1.Intersects(rect2)) return 0.0f;
+    const Rectangle_f &rect1, const Rectangle_f &rect2) {
+  if (!rect1.Intersects(rect2))
+    return 0.0f;
   const float intersection_area = Rectangle_f(rect1).Intersect(rect2).Area();
   float normalization;
   switch (overlap_type) {
-    case NonMaxSuppressionCalculatorOptions::JACCARD:
-      normalization = Rectangle_f(rect1).Union(rect2).Area();
-      break;
-    case NonMaxSuppressionCalculatorOptions::MODIFIED_JACCARD:
-      normalization = rect2.Area();
-      break;
-    case NonMaxSuppressionCalculatorOptions::INTERSECTION_OVER_UNION:
-      normalization = rect1.Area() + rect2.Area() - intersection_area;
-      break;
-    default:
-      LOG(FATAL) << "Unrecognized overlap type: " << overlap_type;
+  case NonMaxSuppressionCalculatorOptions::JACCARD:
+    normalization = Rectangle_f(rect1).Union(rect2).Area();
+    break;
+  case NonMaxSuppressionCalculatorOptions::MODIFIED_JACCARD:
+    normalization = rect2.Area();
+    break;
+  case NonMaxSuppressionCalculatorOptions::INTERSECTION_OVER_UNION:
+    normalization = rect1.Area() + rect2.Area() - intersection_area;
+    break;
+  default:
+    LOG(FATAL) << "Unrecognized overlap type: " << overlap_type;
   }
   return normalization > 0.0f ? intersection_area / normalization : 0.0f;
 }
@@ -102,7 +103,7 @@ float OverlapSimilarity(
 float OverlapSimilarity(
     const int frame_width, const int frame_height,
     const NonMaxSuppressionCalculatorOptions::OverlapType overlap_type,
-    const Location& location1, const Location& location2) {
+    const Location &location1, const Location &location2) {
   const auto rect1 = location1.ConvertToRelativeBBox(frame_width, frame_height);
   const auto rect2 = location2.ConvertToRelativeBBox(frame_width, frame_height);
   return OverlapSimilarity(overlap_type, rect1, rect2);
@@ -114,13 +115,13 @@ float OverlapSimilarity(
 // are not needed for further normalization.
 float OverlapSimilarity(
     const NonMaxSuppressionCalculatorOptions::OverlapType overlap_type,
-    const Location& location1, const Location& location2) {
+    const Location &location1, const Location &location2) {
   const auto rect1 = location1.GetRelativeBBox();
   const auto rect2 = location2.GetRelativeBBox();
   return OverlapSimilarity(overlap_type, rect1, rect2);
 }
 
-}  // namespace
+} // namespace
 
 // A calculator performing non-maximum suppression on a set of detections.
 // Inputs:
@@ -151,12 +152,12 @@ float OverlapSimilarity(
 //   }
 // }
 class NonMaxSuppressionCalculator : public CalculatorBase {
- public:
+public:
   NonMaxSuppressionCalculator() = default;
   ~NonMaxSuppressionCalculator() override = default;
 
-  static absl::Status GetContract(CalculatorContract* cc) {
-    const auto& options = cc->Options<NonMaxSuppressionCalculatorOptions>();
+  static absl::Status GetContract(CalculatorContract *cc) {
+    const auto &options = cc->Options<NonMaxSuppressionCalculatorOptions>();
     if (cc->Inputs().HasTag(kImageTag)) {
       cc->Inputs().Tag(kImageTag).Set<ImageFrame>();
     }
@@ -167,7 +168,7 @@ class NonMaxSuppressionCalculator : public CalculatorBase {
     return absl::OkStatus();
   }
 
-  absl::Status Open(CalculatorContext* cc) override {
+  absl::Status Open(CalculatorContext *cc) override {
     cc->SetOffset(TimestampDiff(0));
 
     options_ = cc->Options<NonMaxSuppressionCalculatorOptions>();
@@ -180,16 +181,17 @@ class NonMaxSuppressionCalculator : public CalculatorBase {
     return absl::OkStatus();
   }
 
-  absl::Status Process(CalculatorContext* cc) override {
+  absl::Status Process(CalculatorContext *cc) override {
+    std::cout << "---from non_max_suppression_calculator ---" << std::endl;
     // Add all input detections to the same vector.
     Detections input_detections;
     for (int i = 0; i < options_.num_detection_streams(); ++i) {
-      const auto& detections_packet = cc->Inputs().Index(i).Value();
+      const auto &detections_packet = cc->Inputs().Index(i).Value();
       // Check whether this stream has a packet for this timestamp.
       if (detections_packet.IsEmpty()) {
         continue;
       }
-      const auto& detections = detections_packet.Get<Detections>();
+      const auto &detections = detections_packet.Get<Detections>();
 
       input_detections.insert(input_detections.end(), detections.begin(),
                               detections.end());
@@ -208,7 +210,26 @@ class NonMaxSuppressionCalculator : public CalculatorBase {
     // identical locations.
     Detections pruned_detections;
     pruned_detections.reserve(input_detections.size());
-    for (auto& detection : input_detections) {
+    for (auto &detection : input_detections) {
+      std::cout << "--- detection ---" << std::endl;
+      // std::cout << "  label " << detection.label(0) << std::endl;
+      // std::cout << "  label_id " << detection.label_id(0) << std::endl;
+      // std::cout << "  score " << detection.score(0) << std::endl;
+      // std::cout << "  feature_tag " << detection.feature_tag() << std::endl;
+      // std::cout << "  track_id " << detection.track_id() << std::endl;
+      // std::cout << "  detection_id " << detection.detection_id() <<
+      // std::endl;
+      std::cout << " location data format "
+                << detection.location_data().format() << std::endl;
+      std::cout << " location data relative bounding box "
+                << detection.location_data().relative_bounding_box().xmin()
+                << " "
+                << detection.location_data().relative_bounding_box().ymin()
+                << " "
+                << detection.location_data().relative_bounding_box().width()
+                << " "
+                << detection.location_data().relative_bounding_box().height()
+                << " " << std::endl;
       if (RetainMaxScoringLabelOnly(&detection)) {
         pruned_detections.push_back(detection);
       }
@@ -232,7 +253,7 @@ class NonMaxSuppressionCalculator : public CalculatorBase {
             : static_cast<int>(indexed_scores.size());
     // A set of detections and locations, wrapping the location data from each
     // detection, which are retained after the non-maximum suppression.
-    auto* retained_detections = new Detections();
+    auto *retained_detections = new Detections();
     retained_detections->reserve(max_num_detections);
 
     if (options_.algorithm() == NonMaxSuppressionCalculatorOptions::WEIGHTED) {
@@ -248,15 +269,15 @@ class NonMaxSuppressionCalculator : public CalculatorBase {
     return absl::OkStatus();
   }
 
- private:
-  void NonMaxSuppression(const IndexedScores& indexed_scores,
-                         const Detections& detections, int max_num_detections,
-                         CalculatorContext* cc, Detections* output_detections) {
+private:
+  void NonMaxSuppression(const IndexedScores &indexed_scores,
+                         const Detections &detections, int max_num_detections,
+                         CalculatorContext *cc, Detections *output_detections) {
     std::vector<Location> retained_locations;
     retained_locations.reserve(max_num_detections);
     // We traverse the detections by decreasing score.
-    for (const auto& indexed_score : indexed_scores) {
-      const auto& detection = detections[indexed_score.first];
+    for (const auto &indexed_score : indexed_scores) {
+      const auto &detection = detections[indexed_score.first];
       if (options_.min_score_threshold() > 0 &&
           detection.score(0) < options_.min_score_threshold()) {
         break;
@@ -266,10 +287,10 @@ class NonMaxSuppressionCalculator : public CalculatorBase {
       // The current detection is suppressed iff there exists a retained
       // detection, whose location overlaps more than the specified
       // threshold with the location of the current detection.
-      for (const auto& retained_location : retained_locations) {
+      for (const auto &retained_location : retained_locations) {
         float similarity;
         if (cc->Inputs().HasTag(kImageTag)) {
-          const auto& frame = cc->Inputs().Tag(kImageTag).Get<ImageFrame>();
+          const auto &frame = cc->Inputs().Tag(kImageTag).Get<ImageFrame>();
           similarity = OverlapSimilarity(frame.Width(), frame.Height(),
                                          options_.overlap_type(),
                                          retained_location, location);
@@ -292,10 +313,10 @@ class NonMaxSuppressionCalculator : public CalculatorBase {
     }
   }
 
-  void WeightedNonMaxSuppression(const IndexedScores& indexed_scores,
-                                 const Detections& detections,
-                                 int max_num_detections, CalculatorContext* cc,
-                                 Detections* output_detections) {
+  void WeightedNonMaxSuppression(const IndexedScores &indexed_scores,
+                                 const Detections &detections,
+                                 int max_num_detections, CalculatorContext *cc,
+                                 Detections *output_detections) {
     IndexedScores remained_indexed_scores;
     remained_indexed_scores.assign(indexed_scores.begin(),
                                    indexed_scores.end());
@@ -305,7 +326,7 @@ class NonMaxSuppressionCalculator : public CalculatorBase {
     output_detections->clear();
     while (!remained_indexed_scores.empty()) {
       const int original_indexed_scores_size = remained_indexed_scores.size();
-      const auto& detection = detections[remained_indexed_scores[0].first];
+      const auto &detection = detections[remained_indexed_scores[0].first];
       if (options_.min_score_threshold() > 0 &&
           detection.score(0) < options_.min_score_threshold()) {
         break;
@@ -314,7 +335,7 @@ class NonMaxSuppressionCalculator : public CalculatorBase {
       candidates.clear();
       const Location location(detection.location_data());
       // This includes the first box.
-      for (const auto& indexed_score : remained_indexed_scores) {
+      for (const auto &indexed_score : remained_indexed_scores) {
         Location rest_location(detections[indexed_score.first].location_data());
         float similarity =
             OverlapSimilarity(options_.overlap_type(), rest_location, location);
@@ -334,11 +355,11 @@ class NonMaxSuppressionCalculator : public CalculatorBase {
         float w_xmax = 0.0f;
         float w_ymax = 0.0f;
         float total_score = 0.0f;
-        for (const auto& candidate : candidates) {
+        for (const auto &candidate : candidates) {
           total_score += candidate.second;
-          const auto& location_data =
+          const auto &location_data =
               detections[candidate.first].location_data();
-          const auto& bbox = location_data.relative_bounding_box();
+          const auto &bbox = location_data.relative_bounding_box();
           w_xmin += bbox.xmin() * candidate.second;
           w_ymin += bbox.ymin() * candidate.second;
           w_xmax += (bbox.xmin() + bbox.width()) * candidate.second;
@@ -351,7 +372,7 @@ class NonMaxSuppressionCalculator : public CalculatorBase {
                 location_data.relative_keypoints(i).y() * candidate.second;
           }
         }
-        auto* weighted_location = weighted_detection.mutable_location_data()
+        auto *weighted_location = weighted_detection.mutable_location_data()
                                       ->mutable_relative_bounding_box();
         weighted_location->set_xmin(w_xmin / total_score);
         weighted_location->set_ymin(w_ymin / total_score);
@@ -360,7 +381,7 @@ class NonMaxSuppressionCalculator : public CalculatorBase {
         weighted_location->set_height((w_ymax / total_score) -
                                       weighted_location->ymin());
         for (int i = 0; i < num_keypoints; ++i) {
-          auto* keypoint = weighted_detection.mutable_location_data()
+          auto *keypoint = weighted_detection.mutable_location_data()
                                ->mutable_relative_keypoints(i);
           keypoint->set_x(keypoints[i * 2] / total_score);
           keypoint->set_y(keypoints[i * 2 + 1] / total_score);
@@ -382,4 +403,4 @@ class NonMaxSuppressionCalculator : public CalculatorBase {
 };
 REGISTER_CALCULATOR(NonMaxSuppressionCalculator);
 
-}  // namespace mediapipe
+} // namespace mediapipe
