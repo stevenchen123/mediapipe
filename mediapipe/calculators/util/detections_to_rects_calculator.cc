@@ -196,7 +196,6 @@ absl::Status DetectionsToRectsCalculator::Open(CalculatorContext *cc) {
 }
 
 absl::Status DetectionsToRectsCalculator::Process(CalculatorContext *cc) {
-  std::cout << "in detections_to_rects_calculator.cc" << std::endl;
   if (cc->Inputs().HasTag(kDetectionTag) &&
       cc->Inputs().Tag(kDetectionTag).IsEmpty()) {
     return absl::OkStatus();
@@ -234,7 +233,6 @@ absl::Status DetectionsToRectsCalculator::Process(CalculatorContext *cc) {
       return absl::OkStatus();
     }
   }
-  std::cout << "    num detections " << detections.size() << std::endl;
 
   // Get dynamic calculator options (e.g. `image_size`).
   const DetectionSpec detection_spec = GetDetectionSpec(cc);
@@ -287,10 +285,6 @@ absl::Status DetectionsToRectsCalculator::Process(CalculatorContext *cc) {
     for (int i = 0; i < detections.size(); ++i) {
       MP_RETURN_IF_ERROR(DetectionToNormalizedRect(
           detections[i], detection_spec, &(output_rects->at(i))));
-      // std::cout << "   detections[i].detection_id() "
-      //           << detections[i].detection_id()
-      //           << " output_rects->at(i).rect_id() "
-      //           << output_rects->at(i).rect_id() << std::endl;
       if (rotate_) {
         float rotation;
         MP_RETURN_IF_ERROR(
@@ -298,8 +292,6 @@ absl::Status DetectionsToRectsCalculator::Process(CalculatorContext *cc) {
         output_rects->at(i).set_rotation(rotation);
       }
     }
-    std::cout << "    num rects " << output_rects->size() << std::endl;
-
     cc->Outputs()
         .Tag(kNormRectsTag)
         .Add(output_rects.release(), cc->InputTimestamp());

@@ -90,7 +90,7 @@ public:
   }
 
   absl::Status Process(CalculatorContext *cc) override {
-    std::cout << "in landmark_projection_calculator " << std::endl;
+    // std::cout << "in landmark_projection_calculator " << std::endl;
     if (cc->Inputs().Tag(kRectTag).IsEmpty()) {
       return absl::OkStatus();
     }
@@ -133,12 +133,12 @@ public:
         new_landmark->set_z(new_z);
       }
       output_landmarks.set_landmark_list_id(input_rect.rect_id());
-      std::cout << "      output_landmarks.landmark_list_id() "
-                << output_landmarks.landmark_list_id()
-                << "; input_rect.rect_id() " << input_rect.rect_id()
-                << std::endl;
-      std::cout << "      output_landmarks.landmarks_size() "
-                << output_landmarks.landmark_size() << std::endl;
+      // std::cout << "      output_landmarks.landmark_list_id() "
+      //           << output_landmarks.landmark_list_id()
+      //           << "; input_rect.rect_id() " << input_rect.rect_id()
+      //           << std::endl;
+      // std::cout << "      output_landmarks.landmarks_size() "
+      //           << output_landmarks.landmark_size() << std::endl;
 
       cc->Outputs().Get(output_id).AddPacket(
           MakePacket<NormalizedLandmarkList>(output_landmarks)

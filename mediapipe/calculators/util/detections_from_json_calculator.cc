@@ -157,10 +157,10 @@ private:
 REGISTER_CALCULATOR(DetectionsFromJsonCalculator);
 
 absl::Status DetectionsFromJsonCalculator::Process(CalculatorContext *cc) {
-  std::cout << "outside frame_id_ " << frame_id_ << std::endl;
+  // std::cout << "outside frame_id_ " << frame_id_ << std::endl;
   if (cc->Inputs().HasTag(kImageFrameTag)) {
     frame_id_++;
-    std::cout << "frame_id_ " << frame_id_ << std::endl;
+    // std::cout << "frame_id_ " << frame_id_ << std::endl;
     auto output_detections = absl::make_unique<std::vector<Detection>>();
     // if (frame_id_ > 5) {
     //   cc->Outputs()

@@ -63,8 +63,8 @@ absl::Status AssociationDetectionAnnotationByOrderCalculator::GetContract(
 
 absl::Status AssociationDetectionAnnotationByOrderCalculator::Process(
     CalculatorContext *cc) {
-  std::cout << "from association_detection_annotation_by_order_calculator"
-            << std::endl;
+  // std::cout << "from association_detection_annotation_by_order_calculator"
+  //           << std::endl;
   Detections detections;
   if (cc->Inputs().HasTag(kDetectionsTag)) {
     detections = cc->Inputs().Tag(kDetectionsTag).Get<Detections>();
@@ -80,9 +80,9 @@ absl::Status AssociationDetectionAnnotationByOrderCalculator::Process(
       absl::make_unique<FrameAnnotation>();
   *(frameAnnotationsWithId.get()) = frameAnnotations;
 
-  std::cout << "   detections.size() " << detections.size()
-            << "   frameAnnotationsWithId->annotations.size() "
-            << frameAnnotationsWithId->annotations_size() << std::endl;
+  // std::cout << "   detections.size() " << detections.size()
+  //           << "   frameAnnotationsWithId->annotations.size() "
+  //           << frameAnnotationsWithId->annotations_size() << std::endl;
   RET_CHECK(detections.size() == frameAnnotationsWithId->annotations_size());
 
   for (int i = 0; i < detections.size(); ++i) {

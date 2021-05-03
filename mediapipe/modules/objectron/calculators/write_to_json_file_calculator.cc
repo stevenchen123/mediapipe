@@ -212,7 +212,7 @@ absl::Status WriteToJsonFileCalculator::Process(CalculatorContext *cc) {
             << std::endl;
   if (cc->Inputs().HasTag(kImageFrameTag)) {
     frame_id_++;
-    std::cout << "    frame_id_ " << frame_id_ << std::endl;
+    // std::cout << "    frame_id_ " << frame_id_ << std::endl;
 
     Detections tracked_detections;
     if (cc->Inputs().HasTag(kDetectionsTrackedTag) &&
@@ -231,10 +231,10 @@ absl::Status WriteToJsonFileCalculator::Process(CalculatorContext *cc) {
       frameAnnotation =
           cc->Inputs().Tag(kFrameAnnotationTag).Get<FrameAnnotation>();
     }
-    std::cout << "   tracked_detections.size() " << tracked_detections.size()
-              << std::endl;
-    std::cout << "   frameAnnotation.annotations_size() "
-              << frameAnnotation.annotations_size() << std::endl;
+    // std::cout << "   tracked_detections.size() " << tracked_detections.size()
+    //           << std::endl;
+    // std::cout << "   frameAnnotation.annotations_size() "
+    //           << frameAnnotation.annotations_size() << std::endl;
     tracked_detections_.emplace_back(tracked_detections);
     fbf_detections_.emplace_back(fbf_detections);
     frameAnnotations_.emplace_back(frameAnnotation);

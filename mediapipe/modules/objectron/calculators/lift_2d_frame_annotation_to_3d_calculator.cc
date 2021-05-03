@@ -109,7 +109,7 @@ absl::Status Lift2DFrameAnnotationTo3DCalculator::Open(CalculatorContext *cc) {
 
 absl::Status
 Lift2DFrameAnnotationTo3DCalculator::Process(CalculatorContext *cc) {
-  std::cout << "in lift_2d_frame_annotation_calculator.cc" << std::endl;
+  // std::cout << "in lift_2d_frame_annotation_calculator.cc" << std::endl;
 
   if (cc->Inputs().Tag(kInputStreamTag).IsEmpty()) {
     return absl::OkStatus();
@@ -118,10 +118,11 @@ Lift2DFrameAnnotationTo3DCalculator::Process(CalculatorContext *cc) {
   auto output_objects = absl::make_unique<FrameAnnotation>();
 
   MP_RETURN_IF_ERROR(ProcessCPU(cc, output_objects.get()));
-  std::cout << "     frame_annotation frame_id " << output_objects->frame_id()
-            << std::endl;
-  std::cout << "     frame_annotation annotation_size "
-            << output_objects->annotations_size() << std::endl;
+  // std::cout << "     frame_annotation frame_id " <<
+  // output_objects->frame_id()
+  //           << std::endl;
+  // std::cout << "     frame_annotation annotation_size "
+  //           << output_objects->annotations_size() << std::endl;
   // Output
   if (cc->Outputs().HasTag(kOutputStreamTag)) {
     cc->Outputs()

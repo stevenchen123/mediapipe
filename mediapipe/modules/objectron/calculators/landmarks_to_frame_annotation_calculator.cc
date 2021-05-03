@@ -67,7 +67,7 @@ absl::Status LandmarksToFrameAnnotationCalculator::Open(CalculatorContext *cc) {
 
 absl::Status
 LandmarksToFrameAnnotationCalculator::Process(CalculatorContext *cc) {
-  std::cout << "from landmarks_to_frame_annotation_calculator" << std::endl;
+  // std::cout << "from landmarks_to_frame_annotation_calculator" << std::endl;
   auto frame_annotation = absl::make_unique<FrameAnnotation>();
 
   // Handle the case when input has only one NormalizedLandmarkList.
@@ -85,15 +85,15 @@ LandmarksToFrameAnnotationCalculator::Process(CalculatorContext *cc) {
         cc->Inputs()
             .Tag(kInputMultiLandmarksTag)
             .Get<std::vector<NormalizedLandmarkList>>();
-    std::cout << "   landmarkList.size() " << landmarks_list.size()
-              << std::endl;
+    // std::cout << "   landmarkList.size() " << landmarks_list.size()
+    //           << std::endl;
 
     for (const auto &landmarks : landmarks_list) {
       AddLandmarksToFrameAnnotation(landmarks, frame_annotation.get());
     }
   }
-  std::cout << "    frame_annotation->annotations_size()"
-            << frame_annotation->annotations_size() << std::endl;
+  // std::cout << "    frame_annotation->annotations_size()"
+  //           << frame_annotation->annotations_size() << std::endl;
 
   // Output
   if (cc->Outputs().HasTag(kOutputFrameAnnotationTag)) {

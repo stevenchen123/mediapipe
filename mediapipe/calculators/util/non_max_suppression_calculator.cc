@@ -182,7 +182,7 @@ public:
   }
 
   absl::Status Process(CalculatorContext *cc) override {
-    std::cout << "---from non_max_suppression_calculator ---" << std::endl;
+    // std::cout << "---from non_max_suppression_calculator ---" << std::endl;
     // Add all input detections to the same vector.
     Detections input_detections;
     for (int i = 0; i < options_.num_detection_streams(); ++i) {
@@ -211,7 +211,7 @@ public:
     Detections pruned_detections;
     pruned_detections.reserve(input_detections.size());
     for (auto &detection : input_detections) {
-      std::cout << "--- detection ---" << std::endl;
+      // std::cout << "--- detection ---" << std::endl;
       // std::cout << "  label " << detection.label(0) << std::endl;
       // std::cout << "  label_id " << detection.label_id(0) << std::endl;
       // std::cout << "  score " << detection.score(0) << std::endl;
@@ -219,17 +219,17 @@ public:
       // std::cout << "  track_id " << detection.track_id() << std::endl;
       // std::cout << "  detection_id " << detection.detection_id() <<
       // std::endl;
-      std::cout << " location data format "
-                << detection.location_data().format() << std::endl;
-      std::cout << " location data relative bounding box "
-                << detection.location_data().relative_bounding_box().xmin()
-                << " "
-                << detection.location_data().relative_bounding_box().ymin()
-                << " "
-                << detection.location_data().relative_bounding_box().width()
-                << " "
-                << detection.location_data().relative_bounding_box().height()
-                << " " << std::endl;
+      // std::cout << " location data format "
+      //           << detection.location_data().format() << std::endl;
+      // std::cout << " location data relative bounding box "
+      //           << detection.location_data().relative_bounding_box().xmin()
+      //           << " "
+      //           << detection.location_data().relative_bounding_box().ymin()
+      //           << " "
+      //           << detection.location_data().relative_bounding_box().width()
+      //           << " "
+      //           << detection.location_data().relative_bounding_box().height()
+      //           << " " << std::endl;
       if (RetainMaxScoringLabelOnly(&detection)) {
         pruned_detections.push_back(detection);
       }

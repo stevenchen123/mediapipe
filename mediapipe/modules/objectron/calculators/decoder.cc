@@ -77,8 +77,8 @@ Eigen::VectorXf computeOrthogonalityCostGradient(const Eigen::VectorXf &vec) {
   grad.segment(3, 3) = x.dot(y) * y + x.dot(z) * z;
   grad.segment(6, 3) = y.dot(x) * x + y.dot(z) * z;
   grad.segment(9, 3) = z.dot(y) * y + z.dot(x) * x;
-  std::cout << "ortho grad" << std::endl;
-  std::cout << grad << std::endl;
+  // std::cout << "ortho grad" << std::endl;
+  // std::cout << grad << std::endl;
   return grad;
 }
 
@@ -329,16 +329,16 @@ absl::Status Decoder::Lift2DTo3D(
     float prev_cost = 1.;
     for (int ii = 0; ii < 100; ++ii) {
       // std::cout << "iteration " << ii << std::endl;
-      printDebugInfo("begin loop", eigen_vec, mt_m);
+      // printDebugInfo("begin loop", eigen_vec, mt_m);
       float lambda_cost = 0.01;
       float lambda_ortho = 10.;
       auto cost_grad = mt_m * eigen_vec;
       eigen_vec = eigen_vec - cost_grad * lambda_cost;
       auto ortho_grad = computeOrthogonalityCostGradient(eigen_vec);
-      std::cout << "atha t" << cost_grad.norm() << " " << ortho_grad.norm()
-                << std::endl;
+      // std::cout << "atha t" << cost_grad.norm() << " " << ortho_grad.norm()
+      //           << std::endl;
       eigen_vec = eigen_vec - lambda_ortho * ortho_grad;
-      printDebugInfo("after gradient descent", eigen_vec, mt_m);
+      // printDebugInfo("after gradient descent", eigen_vec, mt_m);
       // eigen_vec = enforceOrthogonality(eigen_vec);
       // printDebugInfo("after enforcing orthogonality", eigen_vec, mt_m);
       eigen_vec = enforceUnitNorm(eigen_vec);
@@ -387,9 +387,9 @@ absl::Status Decoder::Lift2DTo3D(
     box.Fit(vertices_vec);
     const Eigen::Matrix<float, 3, 3, Eigen::RowMajor> rotation =
         box.GetRotation();
-    std::cout << "rotation from lift_2d_frame_annotation_to_3d_calculator"
-              << std::endl;
-    std::cout << rotation << std::endl;
+    // std::cout << "rotation from lift_2d_frame_annotation_to_3d_calculator"
+    //           << std::endl;
+    // std::cout << rotation << std::endl;
     const Eigen::Vector3f translation = box.GetTranslation();
     const Eigen::Vector3f scale = box.GetScale();
     // Fill box rotation.
